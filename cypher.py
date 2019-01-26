@@ -1,6 +1,31 @@
 
 from abc import ABC, abstractmethod
 
+def learn(letter, polus, key):
+    temp = 0
+    lowLetterFirst = 97
+    lowLetterLast = 122
+    upLetterFirst = 65
+    upLetterLast = 90
+    alfphabetLength = 26
+
+    letterIndex = ord(letter)
+    if letterIndex >= lowLetterFirst and letterIndex <= lowLetterLast:
+        letterIndex -= lowLetterFirst
+        temp = lowLetterFirst
+    elif letterIndex >= upLetterFirst and letterIndex <= upLetterLast:
+        letterIndex -= upLetterFirst
+        temp = upLetterFirst
+    else:
+        return letter
+    if polus == True:
+        letterIndex += key
+    else:
+        letterIndex -= key
+    letterIndex = (letterIndex % alfphabetLength)+temp
+    letter = chr(letterIndex)
+    return letter
+
 class Cypher():
 
     @abstractmethod
@@ -12,33 +37,23 @@ class Cypher():
         pass
 
 
-class Ceaser(Cypher):
+class Caesar(Cypher):
 
     @staticmethod
     def makeCypherText(plainText, key):
-        temp = 0
         output = ""
         for letter in plainText:
-            letterIndex = ord(letter)
-            if letterIndex >= 97 and letterIndex <= 122:
-                letterIndex -= 97
-                temp = 97
-            elif letterIndex >= 65 and letterIndex <= 90:
-                letterIndex -= 65
-                temp = 65
-            else:
-                output += letter
-                continue
-            letterIndex += key
-            letterIndex = (letterIndex%26)+temp
-            letter = chr(letterIndex)
-            output += letter
+            lette = learn(letter, True, key)
+            output += lette
         return output
 
     @staticmethod
-    def makePlainText(cypherText):
-        pass
-
+    def makePlainText(cypherText, key):
+        output = ""
+        for letter in cypherText:
+            lette = learn(letter, False, key)
+            output +=lette
+        return output
 
 class Vizhener(Cypher):
 
