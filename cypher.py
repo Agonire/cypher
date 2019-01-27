@@ -1,7 +1,7 @@
 
 from abc import ABC, abstractmethod
 
-def learn(letter, polus, key):
+def modularAdding(letter, key):
     temp = 0
     lowLetterFirst = 97
     lowLetterLast = 122
@@ -18,10 +18,7 @@ def learn(letter, polus, key):
         temp = upLetterFirst
     else:
         return letter
-    if polus == True:
-        letterIndex += key
-    else:
-        letterIndex -= key
+    letterIndex += key
     letterIndex = (letterIndex % alfphabetLength)+temp
     letter = chr(letterIndex)
     return letter
@@ -43,7 +40,7 @@ class Caesar(Cypher):
     def makeCypherText(plainText, key):
         output = ""
         for letter in plainText:
-            lette = learn(letter, True, key)
+            lette = modularAdding(letter, key)
             output += lette
         return output
 
@@ -51,7 +48,7 @@ class Caesar(Cypher):
     def makePlainText(cypherText, key):
         output = ""
         for letter in cypherText:
-            lette = learn(letter, False, key)
+            lette = modularAdding(letter, -key)
             output +=lette
         return output
 
