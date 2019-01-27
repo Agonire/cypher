@@ -11,7 +11,7 @@ def testCypher(lCypher, key, testPlain, testCypher):
     print("\n")
 
     for i in range(iterations):
-        outpt = lCypher.makeCypherText(testPlain[i], key)
+        outpt = lCypher.encrypt(testPlain[i], key)
         print("The plain text is:         ", testPlain[i])
         print("The cypher text is:        ", outpt)
         print("The cypher test should be: ", testCypher[i])
@@ -19,7 +19,7 @@ def testCypher(lCypher, key, testPlain, testCypher):
         print("The encrypting is correct:                  ",outpt == testCypher[i],"\n\n")
 
     for i in range(iterations):
-        outpt = lCypher.makePlainText(testCypher[i], key)
+        outpt = lCypher.decrypt(testCypher[i], key)
         print("The cypher text is:       ", testCypher[i])
         print("The plain text is:        ", outpt)
         print("The plain test should be: ", testPlain[i])
@@ -32,5 +32,5 @@ leKey = "bc"
 leCaesar = cypher.Caesar
 leVizhener = cypher.Vizhener
 
-testCypher(leCaesar, 1, testPlainCaesar, testCypherCaesar)
-testCypher(leVizhener, leKey, testPlainVizhener, testCypherVizhener)
+# testCypher(leCaesar, 1, testPlainCaesar, testCypherCaesar)
+# testCypher(leVizhener, leKey, testPlainVizhener, testCypherVizhener)

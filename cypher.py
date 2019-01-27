@@ -32,25 +32,25 @@ def modularAdding(letter, key):
 class Cypher():
 
     @abstractmethod
-    def makeCypherText(plainText):
+    def encrypt(plainText):
         pass
 
     @abstractmethod
-    def makePlainText(cypherText):
+    def decrypt(cypherText):
         pass
 
 
 class Caesar(Cypher):
 
     @staticmethod
-    def makeCypherText(plainText, key):
+    def encrypt(plainText, key):
         output = ""
         for letter in plainText:
             output += modularAdding(letter, key)
         return output
 
     @staticmethod
-    def makePlainText(cypherText, key):
+    def decrypt(cypherText, key):
         output = ""
         for letter in cypherText:
             output += modularAdding(letter, -key)
@@ -59,7 +59,7 @@ class Caesar(Cypher):
 class Vizhener(Cypher):
 
     @staticmethod
-    def makeCypherText(plainText, key):
+    def encrypt(plainText, key):
         output = ""
         i = 0
         for letter in plainText:
@@ -71,7 +71,7 @@ class Vizhener(Cypher):
         return output
 
     @staticmethod
-    def makePlainText(cypherText, key):
+    def decrypt(cypherText, key):
         output = ""
         i = 0
         for letter in cypherText:
@@ -85,9 +85,9 @@ class Vizhener(Cypher):
 class DES(Cypher):
 
     @staticmethod
-    def makeCypherText(plainText):
+    def encrypt(plainText):
         pass
 
     @staticmethod
-    def makePlainText(cypherText):
+    def decrypt(cypherText):
         pass
