@@ -1,27 +1,33 @@
 
 from abc import ABC, abstractmethod
 
-def modularAdding(letter, key):
-    temp = 0
+# get index of a symbol and return index for modular math and difference value
+def indexCheck(index):
+    diff = 0
     lowLetterFirst = 97
     lowLetterLast = 122
     upLetterFirst = 65
     upLetterLast = 90
-    alfphabetLength = 26
-
-    letterIndex = ord(letter)
-    if letterIndex >= lowLetterFirst and letterIndex <= lowLetterLast:
-        letterIndex -= lowLetterFirst
-        temp = lowLetterFirst
-    elif letterIndex >= upLetterFirst and letterIndex <= upLetterLast:
-        letterIndex -= upLetterFirst
-        temp = upLetterFirst
+    if index >= lowLetterFirst and index <= lowLetterLast:
+        index -= lowLetterFirst
+        diff = lowLetterFirst
+    elif index >= upLetterFirst and index <= upLetterLast:
+        index -= upLetterFirst
+        diff = upLetterFirst
     else:
-        return letter
-    letterIndex += key
-    letterIndex = (letterIndex % alfphabetLength)+temp
-    letter = chr(letterIndex)
+        return False
+
+    return { "modular" : index, "asci" : diff}
+
+# change ASCII index to new one using key
+def modularAdding(letter, key):
+
+    index = indexCheck(ord(letter))
+    if index:
+        letter = chr(((index["modular"] + key) % 26)+index["asci"])
+
     return letter
+
 
 class Cypher():
 
@@ -40,28 +46,41 @@ class Caesar(Cypher):
     def makeCypherText(plainText, key):
         output = ""
         for letter in plainText:
-            lette = modularAdding(letter, key)
-            output += lette
+            output += modularAdding(letter, key)
         return output
 
     @staticmethod
     def makePlainText(cypherText, key):
         output = ""
         for letter in cypherText:
-            lette = modularAdding(letter, -key)
-            output +=lette
+            output += modularAdding(letter, -key)
         return output
 
 class Vizhener(Cypher):
 
     @staticmethod
-    def makeCypherText(plainText):
-        pass
+    def makeCypherText(plainText, key):
+        output = ""
+        i = 0
+        for letter in plainText:
+            # finfing index from key
+            k = indexCheck(ord(key[i % len(key)]))["modular"]
+            if indexCheck(ord(letter)):
+                i += 1
+            output += modularAdding(letter, k)
+        return output
 
     @staticmethod
-    def makePlainText(cypherText):
-        pass
-
+    def makePlainText(cypherText, key):
+        output = ""
+        i = 0
+        for letter in cypherText:
+            # finfing index from key
+            k = indexCheck(ord(key[i % len(key)]))["modular"]
+            if indexCheck(ord(letter)):
+                i += 1
+            output += modularAdding(letter, -k)
+        return output
 
 class DES(Cypher):
 

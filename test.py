@@ -1,31 +1,36 @@
 import cypher
 
-def testCaesar(lCypher, key):
-    testPlain = ["alfpha", "omega", "zet purpose"]
+testPlainCaesar = ["alfpha", "omega!*!@(,)", "zet purpose", "hello"]
+testCypherCaesar = ["bmgqib", "pnfhb!*!@(,)", "afu qvsqptf", "ifmmp"]
 
-    #cypher text from external site
-    testCypher = ["bmgqib", "pnfhb", "afu qvsqptf"]
+testPlainVizhener = ["dog", "creature", "the independent woman"]
+testCypherVizhener = ["eqh", "dtfcuwsg", "ujf koffrfpegov xqnco"]
+
+def testCypher(lCypher, key, testPlain, testCypher):
+    iterations = len(testPlain)
     print("\n")
 
-
-    for i in range(len(testPlain)):
+    for i in range(iterations):
         outpt = lCypher.makeCypherText(testPlain[i], key)
         print("The plain text is:         ", testPlain[i])
         print("The cypher text is:        ", outpt)
         print("The cypher test should be: ", testCypher[i])
         print("The key is: ", key)
-        print("The encrypting is correct: ",outpt == testCypher[i],"\n\n")
+        print("The encrypting is correct:                  ",outpt == testCypher[i],"\n\n")
 
-    for i in range(len(testPlain)):
+    for i in range(iterations):
         outpt = lCypher.makePlainText(testCypher[i], key)
         print("The cypher text is:       ", testCypher[i])
         print("The plain text is:        ", outpt)
         print("The plain test should be: ", testPlain[i])
         print("The key is: ", key)
-        print("The decrypting is correct: ",outpt == testPlain[i],"\n\n")
+        print("The decrypting is correct:                  ",outpt == testPlain[i],"\n\n")
 
 
+leKey = "bc"
 
-leCypher = cypher.Caesar
+leCaesar = cypher.Caesar
+leVizhener = cypher.Vizhener
 
-testCaesar(leCypher,1)
+testCypher(leCaesar, 1, testPlainCaesar, testCypherCaesar)
+testCypher(leVizhener, leKey, testPlainVizhener, testCypherVizhener)
