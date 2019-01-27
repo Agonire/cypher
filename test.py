@@ -1,6 +1,6 @@
 import cypher
 
-def testCaesar(key):
+def testCaesar(lCypher, key):
     testPlain = ["alfpha", "omega", "zet purpose"]
 
     #cypher text from external site
@@ -8,16 +8,16 @@ def testCaesar(key):
     print("\n")
 
 
-    for i in range(3):
-        outpt = cypher.Caesar.makeCypherText(testPlain[i], key)
+    for i in range(len(testPlain)):
+        outpt = lCypher.makeCypherText(testPlain[i], key)
         print("The plain text is:         ", testPlain[i])
         print("The cypher text is:        ", outpt)
         print("The cypher test should be: ", testCypher[i])
         print("The key is: ", key)
         print("The encrypting is correct: ",outpt == testCypher[i],"\n\n")
 
-    for i in range(3):
-        outpt = cypher.Caesar.makePlainText(testCypher[i], key)
+    for i in range(len(testPlain)):
+        outpt = lCypher.makePlainText(testCypher[i], key)
         print("The cypher text is:       ", testCypher[i])
         print("The plain text is:        ", outpt)
         print("The plain test should be: ", testPlain[i])
@@ -26,6 +26,6 @@ def testCaesar(key):
 
 
 
+leCypher = cypher.Caesar
 
-
-testCaesar(1)
+testCaesar(leCypher,1)
