@@ -45,15 +45,23 @@ class Caesar(Cypher):
     @staticmethod
     def encrypt(plainText, key):
         output = ""
+        if isinstance(key, int):
+            k = key
+        else:
+            k = indexCheck(ord(key))["modular"]
         for letter in plainText:
-            output += modularAdding(letter, key)
+            output += modularAdding(letter, k)
         return output
 
     @staticmethod
     def decrypt(cypherText, key):
         output = ""
+        if isinstance(key, int):
+            k = key
+        else:
+            k = indexCheck(ord(key))["modular"]
         for letter in cypherText:
-            output += modularAdding(letter, -key)
+            output += modularAdding(letter, -k)
         return output
 
 class Vizhener(Cypher):
@@ -63,7 +71,7 @@ class Vizhener(Cypher):
         output = ""
         i = 0
         for letter in plainText:
-            # finfing index from key
+            # finfing index for letter in key
             k = indexCheck(ord(key[i % len(key)]))["modular"]
             if indexCheck(ord(letter)):
                 i += 1
