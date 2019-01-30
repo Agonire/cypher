@@ -32,5 +32,5 @@ leKey = "bc"
 leCaesar = cypher.Caesar
 leVizhener = cypher.Vizhener
 
-# testCypher(leCaesar, 1, testPlainCaesar, testCypherCaesar)
-# testCypher(leVizhener, leKey, testPlainVizhener, testCypherVizhener)
+testCypher(leCaesar, 1, testPlainCaesar, testCypherCaesar)
+testCypher(leVizhener, leKey, testPlainVizhener, testCypherVizhener)
