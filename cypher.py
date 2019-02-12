@@ -109,6 +109,7 @@ def xorLines(lineA, lineB):
         for i in range(len(lineA)):
             result += str(xor(int(lineA[i]), int(lineB[i])))
         return result
+    print("Function XOR (xorLines) need to take equal length strings")
     return False
 
     # s1 = "1123,2013,3010,2103"
@@ -212,26 +213,55 @@ class DES(Cypher):
         return keys
 
     @staticmethod
-    def encrypt(bits, key, rounds = 2, round = 1):
-        keys = DES.generateKeys(key, rounds)
+    def encrypt(bits, key):
 
         bits = permutation(bits, DES.initialPermutation)
         splitedIP = splitInTwo(bits)
 
         right = permutation(splitedIP["right"], DES.expansionPermutation)
-        xorSplit = splitInTwo(xorLines(right, keys[0])
+
+        xorSplit = splitInTwo(xorLines(right, key))
         funcResult = substitutionBox(DES.s_zero, xorSplit["left"]) + substitutionBox(DES.s_one, xorSplit["right"])
+        funcResult = permutation(funcResult, DES.permutationFour)
 
         leftRoundResult = xorLines(splitedIP["left"], funcResult)
 
-        return DES. splitedIP["right"] + leftRoundResult
-
+        return splitedIP["right"] + leftRoundResult
 
     @staticmethod
-    def decrypt(cypherText):
-        pass
+    def decrypt(bits, key):
+
+        bits = permutation(bits, DES.initialPermutation)
+        splitedIP = splitInTwo(bits)
+
+        right = permutation(splitedIP["right"], DES.expansionPermutation)
+
+        xorSplit = splitInTwo(xorLines(right, key))
+        funcResult = substitutionBox(DES.s_zero, xorSplit["left"]) + substitutionBox(DES.s_one, xorSplit["right"])
+        funcResult = permutation(funcResult, DES.permutationFour)
+
+        leftRoundResult = xorLines(splitedIP["left"], funcResult)
+
+        return splitedIP["right"] + leftRoundResult
 
 
-# for i in range(2000000000000000000000):
-#     print(toBit(i))
-# print(permutation("11,11,00,00", DES().permutationFour))
+
+#Full DES cycle
+key = "1010101010"
+text = "11110000"
+rounds = 2
+keys = DES.generateKeys(key,rounds)
+
+re1 = DES.encrypt(text, keys[0])
+print(re1 + " this is the first round result of DES cypher")
+re2 = DES.encrypt(re1, keys[1])
+print(re2 + " this is the second round result of DES cypher")
+finalResult = permutation(re2, DES.finalPermutation)
+print(finalResult)
+
+rd1 = DES.encrypt(finalResult, keys[1])
+print(rd1 + " this is the first round result of DES cypher")
+rd2 = DES.encrypt(rd1, keys[0])
+print(rd2 + " this is the second round result of DES cypher")
+finalResult = permutation(rd2, DES.finalPermutation)
+print(finalResult)
