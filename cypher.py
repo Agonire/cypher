@@ -34,13 +34,15 @@ def toBit(num):
         print("You cant convert negative value to binary")
         return False
     bitValue = 1
+    bits = ""
     while True:
         if num > bitValue:
             bitValue *= 2
         else:
-            bitValue /= 2
+            if bitValue >= 2 and bitValue != num:
+                bitValue /= 2
             break
-    bits = ""
+
     while True:
         if bitValue < 1:
             break
@@ -67,32 +69,12 @@ def permutation(bits, pattern):
 
     result = ""
     pattern = pattern.split(",")
-    # bits = bits.split(",") # this line is for testing purpose only
+    if bits.find(",") > 0:
+        bits = bits.split(",")
     for i in range(len(pattern)):
         result += bits[int(pattern[i])-1]
 
     return result
-
-
-def finalPermutation(bits):
-    pattern = "4,1,3,5,7,2,8,6"
-    return permutation(bits, pattern)
-
-def initialPermutation(bits):
-    pattern = "2,6,3,1,4,8,5,7"
-    return permutation(bits, pattern)
-
-def permutationTen(bits):
-    pattern = "3,5,2,7,4,10,1,9,8,6"
-    return permutation(bits, pattern)
-
-def permutationEight(bits):
-    pattern = "6,3,7,4,8,5,10,9"
-    return permutation(bits,pattern)
-
-def expansionFunc(bits):
-    pattern = "4,1,2,3,2,3,4,1"
-    return permutation(bits, pattern)
 
 def splitInTwo(bits):
     if len(bits) % 2 == 1:
@@ -114,13 +96,17 @@ def xor(a,b):
 
     return (a+b) % 2
 
-def sBox(table, value):
-    s1 = "1123,2013,3010,2103"
-    table = s1.split(",")
+    # s1 = "1123,2013,3010,2103"
+def substitutionBox(table, value):
+    table = table.split(",")
     if len(value) != 4:
         print("The finding input shout be a 4 bit number")
         return False
-    row = 
+    row = fromBit(value[0]+value[3])
+    column = fromBit(value[1]+value[2])
+
+    return toBit(int(table[row][column]))
+
 
 class Cypher():
 
@@ -185,10 +171,21 @@ class Vizhener(Cypher):
 
 class DES(Cypher):
 
+    initialPermutation = "2,6,3,1,4,8,5,7"
+    finalPermutation = "4,1,3,5,7,2,8,6"
+    permutationTen = "3,5,2,7,4,10,1,9,8,6"
+    permutationEight = "6,3,7,4,8,5,10,9"
+    expansionPermutation = "4,1,2,3,2,3,4,1"
+    permutationFour = "2,4,3,1"
+    s0 = "1032,3210,0213,3131"
+    s1 = "1123,2013,3010,2103"
+
     @staticmethod
-    def encrypt(plainText):
-        pass
+    def encrypt():
+        print()
 
     @staticmethod
     def decrypt(cypherText):
         pass
+
+# print(permutation("11,11,00,00", DES().permutationFour))
