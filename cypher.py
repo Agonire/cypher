@@ -29,43 +29,98 @@ def modularAdding(letter, key):
     return letter
 
 #func a 0-255 num to 8-bit string
-def toEightBit(num):
-    if num > 255 or num < 0:
-        return "Wrong value, out of 8 bit range"
-    bitStr = ""
-    bitValue = 128
+def toBit(num):
+    if num < 0:
+        print("You cant convert negative value to binary")
+        return False
+    bitValue = 1
+    while True:
+        if num > bitValue:
+            bitValue *= 2
+        else:
+            bitValue /= 2
+            break
+    bits = ""
     while True:
         if bitValue < 1:
             break
         if num >= bitValue:
-            bitStr += "1"
+            bits += "1"
             num -= bitValue
         else:
-            bitStr += "0"
+            bits += "0"
         bitValue /= 2
 
-    return bitStr
+    return bits
+
+def fromBit(bits):
+    index = len(bits) - 1
+    result = 0
+    for i in range(len(bits)):
+        if (int(bits[index - i]) == 1):
+            result += 2**i
+
+    return result
+
 
 def permutation(bits, pattern):
-    if len(bits) != len(pattern):
-        return "permutation func error: bit strings should be equal"
+
     result = ""
+    pattern = pattern.split(",")
+    # bits = bits.split(",") # this line is for testing purpose only
     for i in range(len(pattern)):
         result += bits[int(pattern[i])-1]
 
     return result
 
-#IP 2 6 3 1 4 8 5 7
+
+def finalPermutation(bits):
+    pattern = "4,1,3,5,7,2,8,6"
+    return permutation(bits, pattern)
+
 def initialPermutation(bits):
-    pattern = "26314857"
+    pattern = "2,6,3,1,4,8,5,7"
     return permutation(bits, pattern)
 
-#commnt
-def initialPermutationRev(bits):
-    pattern = "41357286"
+def permutationTen(bits):
+    pattern = "3,5,2,7,4,10,1,9,8,6"
     return permutation(bits, pattern)
 
+def permutationEight(bits):
+    pattern = "6,3,7,4,8,5,10,9"
+    return permutation(bits,pattern)
 
+def expansionFunc(bits):
+    pattern = "4,1,2,3,2,3,4,1"
+    return permutation(bits, pattern)
+
+def splitInTwo(bits):
+    if len(bits) % 2 == 1:
+        print("The bit number should be even")
+        return False
+    return {"left" : bits[:int(len(bits)/2)], "right" : bits[int(len(bits)/2):]}
+
+def shift(bits, value):
+    result = ""
+    for i in range(len(bits)):
+        result += bits[(i+value) % len(bits)]
+
+    return result
+
+def xor(a,b):
+    if a < 0 or a > 1 or b < 0 or b > 1:
+        print("Input values for XOR are not 0 or 1")
+        return False
+
+    return (a+b) % 2
+
+def sBox(table, value):
+    s1 = "1123,2013,3010,2103"
+    table = s1.split(",")
+    if len(value) != 4:
+        print("The finding input shout be a 4 bit number")
+        return False
+    row = 
 
 class Cypher():
 
