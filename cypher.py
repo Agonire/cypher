@@ -28,6 +28,44 @@ def modularAdding(letter, key):
 
     return letter
 
+#func a 0-255 num to 8-bit string
+def toEightBit(num):
+    if num > 255 or num < 0:
+        return "Wrong value, out of 8 bit range"
+    bitStr = ""
+    bitValue = 128
+    while True:
+        if bitValue < 1:
+            break
+        if num >= bitValue:
+            bitStr += "1"
+            num -= bitValue
+        else:
+            bitStr += "0"
+        bitValue /= 2
+
+    return bitStr
+
+def permutation(bits, pattern):
+    if len(bits) != len(pattern):
+        return "permutation func error: bit strings should be equal"
+    result = ""
+    for i in range(len(pattern)):
+        result += bits[int(pattern[i])-1]
+
+    return result
+
+#IP 2 6 3 1 4 8 5 7
+def initialPermutation(bits):
+    pattern = "26314857"
+    return permutation(bits, pattern)
+
+#commnt
+def initialPermutationRev(bits):
+    pattern = "41357286"
+    return permutation(bits, pattern)
+
+
 
 class Cypher():
 
