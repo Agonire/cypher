@@ -20,11 +20,11 @@ def indexCheck(index):
     return { "modular" : index, "asci" : diff}
 
 # change ASCII index to new one using key
-def modularAdding(letter, key):
+def modularAdding(letter, key, module = 26):
 
     index = indexCheck(ord(letter))
     if index:
-        letter = chr(((index["modular"] + key) % 26)+index["asci"])
+        letter = chr(((index["modular"] + key) % module)+index["asci"])
 
     return letter
 
@@ -64,11 +64,18 @@ def fromBit(bits):
 
     return result
 
+def addEmptyBit(bits, length = 8):
+    result = ""
+    if len(bits) < length:
+        for i in range(length - len(bits)):
+            result += "0"
+    return result + bits
 
 def permutation(bits, pattern):
 
     result = ""
-    pattern = pattern.split(",")
+    if pattern.find(",") > 0:
+        pattern = pattern.split(",")
     if bits.find(",") > 0:
         bits = bits.split(",")
     for i in range(len(pattern)):
@@ -96,6 +103,14 @@ def xor(a,b):
 
     return (a+b) % 2
 
+def xorLines(lineA, lineB):
+    result = ""
+    if len(lineA) == len(lineB):
+        for i in range(len(lineA)):
+            result += str(xor(int(lineA[i]), int(lineB[i])))
+        return result
+    return False
+
     # s1 = "1123,2013,3010,2103"
 def substitutionBox(table, value):
     table = table.split(",")
@@ -105,7 +120,10 @@ def substitutionBox(table, value):
     row = fromBit(value[0]+value[3])
     column = fromBit(value[1]+value[2])
 
-    return toBit(int(table[row][column]))
+    result = toBit(int(table[row][column]))
+    result = addEmptyBit(result, 2)
+
+    return result
 
 
 class Cypher():
@@ -171,21 +189,49 @@ class Vizhener(Cypher):
 
 class DES(Cypher):
 
+    # keys
     initialPermutation = "2,6,3,1,4,8,5,7"
     finalPermutation = "4,1,3,5,7,2,8,6"
     permutationTen = "3,5,2,7,4,10,1,9,8,6"
     permutationEight = "6,3,7,4,8,5,10,9"
     expansionPermutation = "4,1,2,3,2,3,4,1"
-    permutationFour = "2,4,3,1"
-    s0 = "1032,3210,0213,3131"
-    s1 = "1123,2013,3010,2103"
+    permutationFour = "2431"
+    s_zero= "1032,3210,0213,3131"
+    s_one = "1123,2013,3010,2103"
 
     @staticmethod
-    def encrypt():
-        print()
+    def generateKeys(key, rounds = 1):
+        keys = []
+        key = permutation(key, DES.permutationTen)
+        parts = splitInTwo(key)
+        for i in range(1, rounds+1):
+            left = shift(parts["left"], i)
+            right = shift(parts["right"], i)
+            key = left + right
+            keys.append( permutation(key, DES.permutationEight) )
+        return keys
+
+    @staticmethod
+    def encrypt(bits, key, rounds = 2, round = 1):
+        keys = DES.generateKeys(key, rounds)
+
+        bits = permutation(bits, DES.initialPermutation)
+        splitedIP = splitInTwo(bits)
+
+        right = permutation(splitedIP["right"], DES.expansionPermutation)
+        xorSplit = splitInTwo(xorLines(right, keys[0])
+        funcResult = substitutionBox(DES.s_zero, xorSplit["left"]) + substitutionBox(DES.s_one, xorSplit["right"])
+
+        leftRoundResult = xorLines(splitedIP["left"], funcResult)
+
+        return DES. splitedIP["right"] + leftRoundResult
+
 
     @staticmethod
     def decrypt(cypherText):
         pass
 
+
+# for i in range(2000000000000000000000):
+#     print(toBit(i))
 # print(permutation("11,11,00,00", DES().permutationFour))
