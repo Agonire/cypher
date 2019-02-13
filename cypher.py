@@ -196,7 +196,7 @@ class DES(Cypher):
     permutationTen = "3,5,2,7,4,10,1,9,8,6"
     permutationEight = "6,3,7,4,8,5,10,9"
     expansionPermutation = "4,1,2,3,2,3,4,1"
-    permutationFour = "2431"
+    permutationFour = "2,4,3,1"
     s_zero= "1032,3210,0213,3131"
     s_one = "1123,2013,3010,2103"
 
@@ -209,59 +209,65 @@ class DES(Cypher):
             left = shift(parts["left"], i)
             right = shift(parts["right"], i)
             key = left + right
+            # parts["left"] = shift(parts["left"], i)
+            # parts["right"] = shift(parts["right"], i)
+            # key = parts["left"] + parts["right"]
             keys.append( permutation(key, DES.permutationEight) )
         return keys
 
     @staticmethod
-    def encrypt(bits, key):
+    def cryptFunc(bits, key):
+        splitedInitPerm = splitInTwo(bits)
 
-        bits = permutation(bits, DES.initialPermutation)
-        splitedIP = splitInTwo(bits)
+        rightInitPerm = permutation(splitedInitPerm["right"], DES.expansionPermutation)
+        xorWithKey = splitInTwo(xorLines(rightInitPerm, key))
+        sBoxResult = substitutionBox(DES.s_zero, xorWithKey["left"]) + substitutionBox(DES.s_one, xorWithKey["right"])
+        sBoxResult = permutation(sBoxResult, DES.permutationFour)
 
-        right = permutation(splitedIP["right"], DES.expansionPermutation)
+        splitedInitPerm["left"] = xorLines(splitedInitPerm["left"], sBoxResult)
+        result = splitedInitPerm["right"] + splitedInitPerm["left"]
 
-        xorSplit = splitInTwo(xorLines(right, key))
-        funcResult = substitutionBox(DES.s_zero, xorSplit["left"]) + substitutionBox(DES.s_one, xorSplit["right"])
-        funcResult = permutation(funcResult, DES.permutationFour)
+        return result
 
-        leftRoundResult = xorLines(splitedIP["left"], funcResult)
-
-        return splitedIP["right"] + leftRoundResult
 
     @staticmethod
-    def decrypt(bits, key):
-
+    def encrypt(bits, keys):
         bits = permutation(bits, DES.initialPermutation)
-        splitedIP = splitInTwo(bits)
 
-        right = permutation(splitedIP["right"], DES.expansionPermutation)
+        for i in range(len(keys)):
+            bits = DES.cryptFunc(bits, keys[i])
+            print(bits + " as result of " + str(i+1) + " interation, key - " + keys[i] )
 
-        xorSplit = splitInTwo(xorLines(right, key))
-        funcResult = substitutionBox(DES.s_zero, xorSplit["left"]) + substitutionBox(DES.s_one, xorSplit["right"])
-        funcResult = permutation(funcResult, DES.permutationFour)
+        result = shift(bits, int(len(bits)/2))
 
-        leftRoundResult = xorLines(splitedIP["left"], funcResult)
+        result = permutation(result, DES.finalPermutation)
+        print(result + " result of last encryption iteration" )
 
-        return splitedIP["right"] + leftRoundResult
+        return result
 
+
+    @staticmethod
+    def decrypt(bits, keys):
+        bits = permutation(bits, DES.initialPermutation)
+
+        for i in reversed(range(len(keys))):
+            bits = DES.cryptFunc(bits, keys[i])
+            print(bits + " as result of " + str(len(keys) - i) + " interation, key - " + keys[i] )
+
+        result = shift(bits, int(len(bits)/2))
+
+        result = permutation(result, DES.finalPermutation)
+        print(result + " result of last decryption iteration" )
+
+        return result
 
 
 #Full DES cycle
-key = "1010101010"
-text = "11110000"
-rounds = 2
+key = "1101100100"
+text = "11100010"
+rounds = 200
 keys = DES.generateKeys(key,rounds)
+print("keys" + str(keys))
 
-re1 = DES.encrypt(text, keys[0])
-print(re1 + " this is the first round result of DES cypher")
-re2 = DES.encrypt(re1, keys[1])
-print(re2 + " this is the second round result of DES cypher")
-finalResult = permutation(re2, DES.finalPermutation)
-print(finalResult)
-
-rd1 = DES.encrypt(finalResult, keys[1])
-print(rd1 + " this is the first round result of DES cypher")
-rd2 = DES.encrypt(rd1, keys[0])
-print(rd2 + " this is the second round result of DES cypher")
-finalResult = permutation(rd2, DES.finalPermutation)
-print(finalResult)
+x = DES.encrypt(text, keys)
+y = DES.decrypt(x, keys)
