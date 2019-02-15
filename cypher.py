@@ -190,7 +190,6 @@ class Vizhener(Cypher):
 
 class DES(Cypher):
 
-    # keys
     initialPermutation = "2,6,3,1,4,8,5,7"
     finalPermutation = "4,1,3,5,7,2,8,6"
     permutationTen = "3,5,2,7,4,10,1,9,8,6"
@@ -236,12 +235,13 @@ class DES(Cypher):
 
         for i in range(len(keys)):
             bits = DES.cryptFunc(bits, keys[i])
-            print(bits + " as result of " + str(i+1) + " interation, key - " + keys[i] )
+            print(shift(bits, int(len(bits)/2)) + " as result of " + str(i+1) + " round, key - " + keys[i] )
 
+        # nigelation of simple P in iteration
         result = shift(bits, int(len(bits)/2))
 
         result = permutation(result, DES.finalPermutation)
-        print(result + " result of last encryption iteration" )
+        print("\n" + result + " result of encryption\n" )
 
         return result
 
@@ -252,22 +252,27 @@ class DES(Cypher):
 
         for i in reversed(range(len(keys))):
             bits = DES.cryptFunc(bits, keys[i])
-            print(bits + " as result of " + str(len(keys) - i) + " interation, key - " + keys[i] )
+            print(shift(bits, int(len(bits)/2)) + " as result of " + str(len(keys) - i) + " round, key - " + keys[i] )
 
+        # nigelation of simple P in iteration
         result = shift(bits, int(len(bits)/2))
 
         result = permutation(result, DES.finalPermutation)
-        print(result + " result of last decryption iteration" )
+        print("\n" + result + " result of decryption\n" )
 
         return result
 
 
-#Full DES cycle
-key = "1101100100"
-text = "11100010"
-rounds = 200
-keys = DES.generateKeys(key,rounds)
-print("keys" + str(keys))
 
-x = DES.encrypt(text, keys)
-y = DES.decrypt(x, keys)
+
+
+
+      #Full DES cycle
+# key = "1101100110"
+# text = "11100010"
+# rounds = 3
+# keys = DES.generateKeys(key,rounds)
+# print("\n\nkeys" + str(keys) + "\n\n")
+#
+# encr = DES.encrypt(text, keys)
+# decr = DES.decrypt(encr, keys)
