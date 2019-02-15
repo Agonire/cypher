@@ -1,5 +1,6 @@
 
 from abc import ABC, abstractmethod
+import textwrap
 
 # get index of a symbol and return index for modular math and difference value
 def indexCheck(index):
@@ -64,10 +65,11 @@ def fromBit(bits):
 
     return result
 
-def addEmptyBit(bits, length = 8):
+def addEmptyBit(bits, bitRate = 256):
     result = ""
-    if len(bits) < length:
-        for i in range(length - len(bits)):
+    bitLength = len(toBit(bitRate)) - 1
+    if len(bits) < bitLength:
+        for i in range(bitLength - len(bits)):
             result += "0"
     return result + bits
 
@@ -126,6 +128,43 @@ def substitutionBox(table, value):
 
     return result
 
+def getFileContent(path):
+    try:
+        f = open(path, "rt", encoding="utf-8")
+        content = f.read()
+        f.close()
+        return content
+    except:
+        print("File in destination " + path + " does not exist")
+        return False
+
+def setFileContent(path, content = ""):
+    try:
+        f = open(path, "xt", encoding="utf-8")
+        print("\n    Creating and writing to a new file at " + path + " location\n")
+    except:
+        print("\n    Writing to an existing file at " + path + " location\n")
+    finally:
+        f = open(path, "wt", encoding="utf-8")
+        f.write(content)
+        f.close()
+
+def textToBitStream(text, bitRate = 256):
+    bitStream = ""
+    for symbol in text:
+        bitValue = addEmptyBit(toBit(ord(symbol)), bitRate)
+        bitStream += bitValue
+
+    return bitStream
+
+def bitStreamToText(bitStream, bitRate = 256):
+    text = ""
+    bitLength = len(toBit(bitRate)) - 1
+    bitStream = textwrap.wrap(bitStream, bitLength)
+    for item in bitStream:
+        text += chr(fromBit(item))
+
+    return  text
 
 class Cypher():
 
@@ -262,6 +301,32 @@ class DES(Cypher):
 
         return result
 
+class StreamCypher(Cypher):
+
+    @staticmethod
+    def cryptFunc(plainText, keys = 1):
+        ptPath = "./Text files/plainText.txt"
+        ctPath = "./Text files/cypherText.txt"
+
+        setFileContent(ptPath, plainText)
+        print(getFileContent(ptPath))
+
+        bitStream = textToBitStream(getFileContent(ptPath))
+        xoredBits = ""
+        for bit in bitStream:
+            xoredBits += str( xor(int(bit), keys) )
+
+        setFileContent(ctPath,  bitStreamToText(xoredBits))
+        print(getFileContent(ctPath))
+
+
+    @staticmethod
+    def encrypt(plainText, keys):
+        pass
+
+    @staticmethod
+    def decrypt(cypherText, keys):
+        pass
 
 
 
@@ -276,3 +341,6 @@ class DES(Cypher):
 #
 # encr = DES.encrypt(text, keys)
 # decr = DES.decrypt(encr, keys)
+
+
+StreamCypher.cryptFunc("!@#casual text, krappa 12lasjdlahsdhaskldhlkslkakljhasasdklj    !@#!!@$!@ askjjdh aksdla sdklajshdlkashdaslkdhalskjdna;sdhkajsndlsjh")
