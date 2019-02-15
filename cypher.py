@@ -65,11 +65,12 @@ def fromBit(bits):
 
     return result
 
-def addEmptyBit(bits, bitRate = 256):
+def addEmptyBit(bits, bitRate = 8):
     result = ""
-    bitLength = len(toBit(bitRate)) - 1
-    if len(bits) < bitLength:
-        for i in range(bitLength - len(bits)):
+    if len(bits) > bitRate:
+        print("You are trying to convert bigger bit-rate in lower, in addEmptyBit function")
+    if len(bits) < bitRate:
+        for i in range(bitRate - len(bits)):
             result += "0"
     return result + bits
 
@@ -149,7 +150,8 @@ def setFileContent(path, content = ""):
         f.write(content)
         f.close()
 
-def textToBitStream(text, bitRate = 256):
+def textToBitStream(text, bitRate = 8):
+    # Since this function is working with ASCII table the lowest possible bit-rate value should be 8, or you will get incorrect values
     bitStream = ""
     for symbol in text:
         bitValue = addEmptyBit(toBit(ord(symbol)), bitRate)
@@ -157,10 +159,10 @@ def textToBitStream(text, bitRate = 256):
 
     return bitStream
 
-def bitStreamToText(bitStream, bitRate = 256):
+def bitStreamToText(bitStream, bitRate = 8):
+    # Since this function is working with ASCII table the lowest possible bit-rate value should be 8, or you will get incorrect values
     text = ""
-    bitLength = len(toBit(bitRate)) - 1
-    bitStream = textwrap.wrap(bitStream, bitLength)
+    bitStream = textwrap.wrap(bitStream, bitRate)
     for item in bitStream:
         text += chr(fromBit(item))
 
@@ -239,7 +241,7 @@ class DES(Cypher):
     s_one = "1123,2013,3010,2103"
 
     @staticmethod
-    def generateKeys(key, rounds = 1):
+    def keyGenerator(key, rounds = 1):
         keys = []
         key = permutation(key, DES.permutationTen)
         parts = splitInTwo(key)
@@ -247,11 +249,9 @@ class DES(Cypher):
             left = shift(parts["left"], i)
             right = shift(parts["right"], i)
             key = left + right
-            # parts["left"] = shift(parts["left"], i)
-            # parts["right"] = shift(parts["right"], i)
-            # key = parts["left"] + parts["right"]
             keys.append( permutation(key, DES.permutationEight) )
         return keys
+
 
     @staticmethod
     def cryptFunc(bits, key):
@@ -263,7 +263,7 @@ class DES(Cypher):
         sBoxResult = permutation(sBoxResult, DES.permutationFour)
 
         splitedInitPerm["left"] = xorLines(splitedInitPerm["left"], sBoxResult)
-        result = splitedInitPerm["right"] + splitedInitPerm["left"]
+        result = splitedInitPerm["left"] + splitedInitPerm["right"]
 
         return result
 
@@ -274,8 +274,8 @@ class DES(Cypher):
 
         for i in range(len(keys)):
             bits = DES.cryptFunc(bits, keys[i])
-            print(shift(bits, int(len(bits)/2)) + " as result of " + str(i+1) + " round, key - " + keys[i] )
-
+            print(bits + " as result of " + str(i+1) + " encryption round, key - " + keys[i] )
+            shift(bits, int(len(bits)/2))
         # nigelation of simple P in iteration
         result = shift(bits, int(len(bits)/2))
 
@@ -291,8 +291,8 @@ class DES(Cypher):
 
         for i in reversed(range(len(keys))):
             bits = DES.cryptFunc(bits, keys[i])
-            print(shift(bits, int(len(bits)/2)) + " as result of " + str(len(keys) - i) + " round, key - " + keys[i] )
-
+            print(bits + " as result of " + str(len(keys) - i) + " decryption round, key - " + keys[i] )
+            shift(bits, int(len(bits)/2))
         # nigelation of simple P in iteration
         result = shift(bits, int(len(bits)/2))
 
@@ -301,46 +301,136 @@ class DES(Cypher):
 
         return result
 
+
+    @staticmethod
+    def start():
+        key = "1101100110"
+        text = "11100010"
+        rounds = 2
+        keys = DES.keyGenerator(key,rounds)
+        print("\n\nkeys" + str(keys) + "\n\n")
+
+        encr = DES.encrypt(text, keys)
+        decr = DES.decrypt(encr, keys)
+
 class StreamCypher(Cypher):
 
+    ptPath = "./Text files/plainText.txt"
+    ctPath = "./Text files/cypherText.txt"
+    resPath = "./Text files/resultText.txt"
+
+    pattern =  "8,4,3,2,0"
+    initialRegister = "00010110"
+
     @staticmethod
-    def cryptFunc(plainText, keys = 1):
-        ptPath = "./Text files/plainText.txt"
-        ctPath = "./Text files/cypherText.txt"
-
-        setFileContent(ptPath, plainText)
-        print(getFileContent(ptPath))
-
-        bitStream = textToBitStream(getFileContent(ptPath))
-        xoredBits = ""
-        for bit in bitStream:
-            xoredBits += str( xor(int(bit), keys) )
-
-        setFileContent(ctPath,  bitStreamToText(xoredBits))
-        print(getFileContent(ctPath))
+    def createStartingFile(ptPath=ptPath):
+        setFileContent(ptPath)
 
 
     @staticmethod
-    def encrypt(plainText, keys):
-        pass
+    def getValues():
+        ptPath = StreamCypher.ptPath
+        ctPath = StreamCypher.ctPath
+        resPath = StreamCypher.resPath
+
+        pattern =  StreamCypher.pattern
+        initialRegister = StreamCypher.initialRegister
+
+        print("\n   Starting stream cypher program \n initialization...\n")
+        inp = input(" Enter plain text file location please, or default at " + ptPath + " will be used\n\n  ")
+        if inp == "":
+            print("\n *Default file location will be used\n")
+        else:
+            ptPath = inp
+            print("\n *New file location at " + ptPath + " will be used\n")
+
+        inp = input(" Enter cypher text file location please, or default at " + ctPath + " will be used\n\n  ")
+        if inp == "":
+            print("\n *Default file location will be used\n")
+        else:
+            ctPath = inp
+            print("\n New file location at " + ctPath + " will be used\n")
+
+        inp = input(" Enter decrypted text file location please, or default at " + resPath + " will be used\n\n  ")
+        if inp == "":
+            print("\n *Default file location will be used\n")
+        else:
+            resPath = inp
+            print("\n *New file location at " + resPath + " will be used\n")
+
+
+        inp = input(" Please enter initial register value, or default  " + initialRegister + " will be used\n\n  ")
+        if inp == "":
+            print("\n *Default initial register will be used\n")
+        else:
+            initialRegister = inp
+            print("\n *New initial register " + initialRegister + " will be used\n")
+
+        inp = input(" Please enter register pattern, or default pattern " + pattern + " will be used\n\n  ")
+        if inp == "":
+            print("\n *Default pattern will be used\n")
+        else:
+            pattern = inp
+            print("\n *New pattern " + pattern + " will be used\n")
+
+        return {"ptPath":ptPath, "ctPath":ctPath, "resPath":resPath, "pattern":pattern, "initReg":initialRegister}
+
 
     @staticmethod
-    def decrypt(cypherText, keys):
-        pass
+    def keyGenerator(bitStream, initialRegister, pattern):
+        keyLength = len(bitStream)
+        keyStream = ""
+        pattern = pattern.split(",")
+
+        if int(pattern[0]) != len(initialRegister):
+            print("\n\n   Initial register length does not have valid length, program can't generate keys\n\n")
+            return False
+
+        pattern = pattern[1:] #removing 1st elem of a list
+        register = initialRegister[::-1] #reverse bit stream
+        for i in range(keyLength):
+            newBit = 0
+            for val in pattern:
+                newBit += int(register[int(val)])
+
+            newBit = str(newBit%2)
+            register = register[1:] + newBit #next round register
+
+            keyStream += newBit
+
+        return keyStream #string of bits length equal to
+
+
+    @staticmethod
+    def crypt(fromPath, toPath, initialRegister = initialRegister, pattern = pattern ):
+
+        content = getFileContent(fromPath)
+        if content or content == "":
+            bitStream = textToBitStream(content)
+            keyStream = StreamCypher.keyGenerator(bitStream, initialRegister, pattern)
+
+            bitStream = xorLines(bitStream, keyStream)
+            output = bitStreamToText(bitStream)
+
+            setFileContent(toPath, output)
+        else:
+            StreamCypher.createStartingFile(fromPath)
+            print("You can use a brand new created file at " + fromPath + " location")
+
+
+    @staticmethod
+    def start():
+        data = StreamCypher.getValues()
+
+        print("\n Starting encrytion...")
+        StreamCypher.crypt(data["ptPath"], data["ctPath"], data["initReg"], data["pattern"])
+
+        print("\n Starting decrytion...")
+        StreamCypher.crypt(data["ctPath"], data["resPath"], data["initReg"], data["pattern"])
 
 
 
 
 
-      #Full DES cycle
-# key = "1101100110"
-# text = "11100010"
-# rounds = 3
-# keys = DES.generateKeys(key,rounds)
-# print("\n\nkeys" + str(keys) + "\n\n")
-#
-# encr = DES.encrypt(text, keys)
-# decr = DES.decrypt(encr, keys)
-
-
-StreamCypher.cryptFunc("!@#casual text, krappa 12lasjdlahsdhaskldhlkslkakljhasasdklj    !@#!!@$!@ askjjdh aksdla sdklajshdlkashdaslkdhalskjdna;sdhkajsndlsjh")
+# DES.start()
+StreamCypher.start()
