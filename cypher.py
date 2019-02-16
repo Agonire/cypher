@@ -168,6 +168,35 @@ def bitStreamToText(bitStream, bitRate = 8):
 
     return  text
 
+def getValue(tokenName, default = "", length = -1):
+    result = ""
+    if default and len(default) != length and length > 0:
+        print("**Default value length is incorrect, during function invoking")
+        return False
+
+    while True:
+        if default:
+            inp = input("\n Enter " + tokenName + " please, or default " + default + " will be used\n\n  ")
+        else:
+            inp = input("\n Enter " + tokenName + " please\n\n  ")
+
+        if inp and len(inp) != length and length > 0:
+            print("**Input value length is incorrect")
+            continue
+
+        if inp:
+            result = inp
+            print("\n New value for " + tokenName + " will be used - \"" + result + "\"\n")
+            break
+        if not inp and default:
+            result = default
+            print("\n *Default " + tokenName + " will be used\n")
+            break
+        print(" You must enter value for " +  tokenName)
+
+    return result
+
+
 class Cypher():
 
     @abstractmethod
@@ -254,7 +283,7 @@ class DES(Cypher):
 
 
     @staticmethod
-    def cryptFunc(bits, key):
+    def crypt(bits, key):
         splitedInitPerm = splitInTwo(bits)
 
         rightInitPerm = permutation(splitedInitPerm["right"], DES.expansionPermutation)
@@ -273,7 +302,7 @@ class DES(Cypher):
         bits = permutation(bits, DES.initialPermutation)
 
         for i in range(len(keys)):
-            bits = DES.cryptFunc(bits, keys[i])
+            bits = DES.crypt(bits, keys[i])
             print(bits + " as result of " + str(i+1) + " encryption round, key - " + keys[i] )
             shift(bits, int(len(bits)/2))
         # nigelation of simple P in iteration
@@ -290,7 +319,7 @@ class DES(Cypher):
         bits = permutation(bits, DES.initialPermutation)
 
         for i in reversed(range(len(keys))):
-            bits = DES.cryptFunc(bits, keys[i])
+            bits = DES.crypt(bits, keys[i])
             print(bits + " as result of " + str(len(keys) - i) + " decryption round, key - " + keys[i] )
             shift(bits, int(len(bits)/2))
         # nigelation of simple P in iteration
@@ -315,63 +344,30 @@ class DES(Cypher):
 
 class StreamCypher(Cypher):
 
-    ptPath = "./Text files/plainText.txt"
-    ctPath = "./Text files/cypherText.txt"
-    resPath = "./Text files/resultText.txt"
-
-    pattern =  "8,4,3,2,0"
-    initialRegister = "00010110"
-
-    @staticmethod
-    def createStartingFile(ptPath=ptPath):
-        setFileContent(ptPath)
-
-
     @staticmethod
     def getValues():
-        ptPath = StreamCypher.ptPath
-        ctPath = StreamCypher.ctPath
-        resPath = StreamCypher.resPath
+        #tokens for getValue function
+        plainToken = "plain text file location"
+        cypherToken = "cypher text file location"
+        resultToken = "decryption text file location"
+        patternToken = "pattern"
+        initRegToken = "initial register"
 
-        pattern =  StreamCypher.pattern
-        initialRegister = StreamCypher.initialRegister
+        #default values
+        ptPath = "./Text files/plainText.txt"
+        ctPath = "./Text files/cypherText.txt"
+        resPath = "./Text files/resultText.txt"
+        pattern =  "8,4,3,2,0"
+        initialRegister = "00010110"
+
 
         print("\n   Starting stream cypher program \n initialization...\n")
-        inp = input(" Enter plain text file location please, or default at " + ptPath + " will be used\n\n  ")
-        if inp == "":
-            print("\n *Default file location will be used\n")
-        else:
-            ptPath = inp
-            print("\n *New file location at " + ptPath + " will be used\n")
 
-        inp = input(" Enter cypher text file location please, or default at " + ctPath + " will be used\n\n  ")
-        if inp == "":
-            print("\n *Default file location will be used\n")
-        else:
-            ctPath = inp
-            print("\n New file location at " + ctPath + " will be used\n")
-
-        inp = input(" Enter decrypted text file location please, or default at " + resPath + " will be used\n\n  ")
-        if inp == "":
-            print("\n *Default file location will be used\n")
-        else:
-            resPath = inp
-            print("\n *New file location at " + resPath + " will be used\n")
-
-
-        inp = input(" Please enter initial register value, or default  " + initialRegister + " will be used\n\n  ")
-        if inp == "":
-            print("\n *Default initial register will be used\n")
-        else:
-            initialRegister = inp
-            print("\n *New initial register " + initialRegister + " will be used\n")
-
-        inp = input(" Please enter register pattern, or default pattern " + pattern + " will be used\n\n  ")
-        if inp == "":
-            print("\n *Default pattern will be used\n")
-        else:
-            pattern = inp
-            print("\n *New pattern " + pattern + " will be used\n")
+        ptPath = getValue(plainToken, ptPath)
+        ctPath = getValue(cypherToken, ctPath)
+        resPath = getValue(resultToken, resPath)
+        pattern = getValue(patternToken, pattern)
+        initialRegister = getValue(initRegToken, initialRegister)
 
         return {"ptPath":ptPath, "ctPath":ctPath, "resPath":resPath, "pattern":pattern, "initReg":initialRegister}
 
@@ -383,7 +379,7 @@ class StreamCypher(Cypher):
         pattern = pattern.split(",")
 
         if int(pattern[0]) != len(initialRegister):
-            print("\n\n   Initial register length does not have valid length, program can't generate keys\n\n")
+            print("\n\n   Initial register does not have valid length, program can't generate keys\n\n")
             return False
 
         pattern = pattern[1:] #removing 1st elem of a list
@@ -394,15 +390,14 @@ class StreamCypher(Cypher):
                 newBit += int(register[int(val)])
 
             newBit = str(newBit%2)
+            keyStream += register[0]
             register = register[1:] + newBit #next round register
-
-            keyStream += newBit
 
         return keyStream #string of bits length equal to
 
 
     @staticmethod
-    def crypt(fromPath, toPath, initialRegister = initialRegister, pattern = pattern ):
+    def crypt(fromPath, toPath, initialRegister, pattern):
 
         content = getFileContent(fromPath)
         if content or content == "":
@@ -414,8 +409,7 @@ class StreamCypher(Cypher):
 
             setFileContent(toPath, output)
         else:
-            StreamCypher.createStartingFile(fromPath)
-            print("You can use a brand new created file at " + fromPath + " location")
+            setFileContent(fromPath)
 
 
     @staticmethod
@@ -428,9 +422,58 @@ class StreamCypher(Cypher):
         print("\n Starting decrytion...")
         StreamCypher.crypt(data["ctPath"], data["resPath"], data["initReg"], data["pattern"])
 
+class BlockCypher(Cypher):
+
+    @staticmethod
+    def getValues():
+
+        #tokens for getValue function
+        plainToken = "plain text file location"
+        cypherToken = "cypher text file location"
+        resultToken = "decryption text file location"
+        keyToken =  "key"
+        initRegToken = "initial register"
+        workingModToken = ""
+
+        #default values
+        ptPath = "./Text files/plainText.txt"
+        ctPath = "./Text files/cypherText.txt"
+        resPath = "./Text files/resultText.txt"
+        key =  ""
+        initialRegister = ""
+        workingMod = ""
+
+        print("\n   Starting block cypher program \n initialization...\n")
+
+        ptPath = getValue(plainToken, ptPath)
+        ctPath = getValue(cypherToken, ctPath)
+        resPath = getValue(resultToken, resPath)
+        key = getValue(keyToken, key)
+        initialRegister = getValue(initRegToken, initialRegister)
+        workingMod = getValue(workingModToken, workingMod)
+
+        return {"ptPath":ptPath, "ctPath":ctPath, "resPath":resPath, "pattern":pattern, "initReg":initialRegister}
 
 
+    @staticmethod
+    def crypt():
+        pass
 
+
+    @staticmethod
+    def encrypt():
+        pass
+
+
+    @staticmethod
+    def decrypt():
+        pass
+
+
+    @staticmethod
+    def start():
+        data = BlockCypher.getValues()
 
 # DES.start()
-StreamCypher.start()
+# StreamCypher.start()
+BlockCypher.start()
