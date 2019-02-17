@@ -30,6 +30,18 @@ def modularAdding(letter, key, module = 26):
     return letter
 
 #func a 0-255 num to 8-bit string
+def checkBlockLength(bits, length = 8):
+    if len(bits) == length:
+        return True
+    else:
+        return False
+
+def divideBitStream(bitStream, length = 8):
+    if len(bitStream)%length == 0:
+        return textwrap.wrap(bitStream, length)
+    else:
+        return length - len(bitStream)%length
+
 def toBit(num):
     if num < 0:
         print("You cant convert negative value to binary")
@@ -186,11 +198,11 @@ def getValue(tokenName, default = "", length = -1):
 
         if inp:
             result = inp
-            print("\n New value for " + tokenName + " will be used - \"" + result + "\"\n")
+            # print("\n New value for " + tokenName + " will be used - \"" + result + "\"\n")
             break
         if not inp and default:
             result = default
-            print("\n *Default " + tokenName + " will be used\n")
+            # print("\n *Default " + tokenName + " will be used\n")
             break
         print(" You must enter value for " +  tokenName)
 
@@ -412,6 +424,7 @@ class StreamCypher(Cypher):
 
             setFileContent(toPath, output)
         else:
+            # this option is used to create empty file if not exist
             setFileContent(fromPath)
 
 
@@ -427,52 +440,82 @@ class StreamCypher(Cypher):
 
 class BlockCypher(Cypher):
 
-    workingModToken = "working mod"
-    workingMod = ""
+
 
     @staticmethod
     def getValues():
 
+
         #tokens for getValue function
-        plainToken = "plain text file location"
-        cypherToken = "cypher text file location"
-        resultToken = "decryption text file location"
+        inToken = "input text file location"
+        outToken = "cypher text file location"
         keyToken =  "key"
         initRegToken = "initial register"
-
+        workingModToken = "working mod"
+        cypherToken = "cypher mod"
 
         #default values
-        ptPath = "./Text files/plainText.txt"
-        ctPath = "./Text files/cypherText.txt"
-        resPath = "./Text files/resultText.txt"
-        key =  ""
+        inPath = "./Text files/plainText.txt"
+        outPath = "./Text files/cypherText.txt"
+        key =  "1111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111001100"
         initialRegister = ""
-
+        workingMod = ""
+        cypherMod = ""
 
         print("\n   Starting block cypher program \n initialization...\n")
 
-        ptPath = getValue(plainToken, ptPath)
-        ctPath = getValue(cypherToken, ctPath)
-        resPath = getValue(resultToken, resPath)
+        inPath = getValue(inToken, inPath)
+        outPath = getValue(outToken, outPath)
         key = getValue(keyToken, key)
+        while True:
+            if not checkBlockLength(key, 256):
+                print("You have entered incorrect key length")
+                key = getValue(keyToken)
+            else:
+                break
+
         initialRegister = getValue(initRegToken, initialRegister)
-        BlockCypher.workingMod = getValue(BlockCypher.workingModToken, BlockCypher.workingMod)
+        workingMod = getValue(workingModToken, workingMod)
+        while True:
+            if workingMod.lower() == "simple permutation" or workingMod.lower() == "sp":
+                workingMod = "sp"
+                break
+            elif workingMod.lower() == "gamma" or workingMod.lower() == "g":
+                workingMod = "g"
+                break
+            elif workingMod.lower() == "gamma feadback" or workingMod.lower() == "gf":
+                workingMod = "gf"
+                break
+            else:
+                print("  You have entered incorrect working mod value! Try \"Simple permutation\", \"Gamma\" or \"Gamma feadback\"")
+                workingMod = getValue(workingModToken)
 
-        return {"ptPath":ptPath, "ctPath":ctPath, "resPath":resPath, "key":key, "initReg":initialRegister, "workingMod":BlockCypher.workingMod}
+        cypherMod = getValue(cypherToken, cypherMod)
+        while True:
+            if cypherMod.lower() == "encrypt" or cypherMod.lower() == "e":
+                cypherMod = "e"
+                break
+            elif cypherMod.lower() == "decrypt" or cypherMod.lower() == "d":
+                cypherMod = "d"
+                break
+            else:
+                print("  You have entered incorrect cypher mod value! Try encrypt or decrypt")
+                cypherMod = getValue(cypherToken)
+
+
+        return {"inPath":inPath, "outPath":outPath,  "key":key, "initReg":initialRegister, "workingMod":workingMod, "cypherMod":cypherMod}
 
 
     @staticmethod
-    def crypt():
+    def simplePermMod(bitStream, key, cypherMod):
         pass
 
-
     @staticmethod
-    def encrypt():
+    def gamma(bitStream, key, cypherMod):
         pass
 
-
     @staticmethod
-    def decrypt():
+    def gammaFeadback(bitStream, key, cypherMod):
         pass
 
 
@@ -480,8 +523,29 @@ class BlockCypher(Cypher):
     def start():
         data = BlockCypher.getValues()
 
+        bitStream = textToBitStream(getFileContent(data["inPath"]))
+
+        if data["workingMod"] == "sp":
+            print("  Using simple permutation mod")
+            result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
+        elif data["workingMod"] == "g":
+            print("  Using gamma mod")
+            result = BlockCypher.gamma(bitStream, data["key"], data["cypherMod"])
+        elif data["workingMod"] == "gf":
+            print("  Using gamma feadback mod")
+            result = BlockCypher.gammaFeadback(bitStream, data["key"], data["cypherMod"])
+
+        setFileContent(data["outPath"], bitStreamToText(result))
+
+
+        print("\n\n Would you like to continue? \n")
+        inp = input()
+        if bool(inp):
+            BlockCypher.start()
+        else:
+            print("\n\n Ending block cypher \n")
 
 
 # DES.start()
-StreamCypher.start()
-# BlockCypher.start()
+# StreamCypher.start()
+BlockCypher.start()
