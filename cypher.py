@@ -373,8 +373,11 @@ class StreamCypher(Cypher):
 
 
     @staticmethod
-    def keyGenerator(bitStream, initialRegister, pattern):
-        keyLength = len(bitStream)
+    def keyGenerator(initialRegister, pattern, bitStream = "", length = 0):
+        if length:
+            keyLength = length
+        else:
+            keyLength = len(bitStream)
         keyStream = ""
         pattern = pattern.split(",")
 
@@ -402,7 +405,7 @@ class StreamCypher(Cypher):
         content = getFileContent(fromPath)
         if content or content == "":
             bitStream = textToBitStream(content)
-            keyStream = StreamCypher.keyGenerator(bitStream, initialRegister, pattern)
+            keyStream = StreamCypher.keyGenerator(initialRegister, pattern, bitStream = bitStream)
 
             bitStream = xorLines(bitStream, keyStream)
             output = bitStreamToText(bitStream)
@@ -424,6 +427,9 @@ class StreamCypher(Cypher):
 
 class BlockCypher(Cypher):
 
+    workingModToken = "working mod"
+    workingMod = ""
+
     @staticmethod
     def getValues():
 
@@ -433,7 +439,7 @@ class BlockCypher(Cypher):
         resultToken = "decryption text file location"
         keyToken =  "key"
         initRegToken = "initial register"
-        workingModToken = ""
+
 
         #default values
         ptPath = "./Text files/plainText.txt"
@@ -441,7 +447,7 @@ class BlockCypher(Cypher):
         resPath = "./Text files/resultText.txt"
         key =  ""
         initialRegister = ""
-        workingMod = ""
+
 
         print("\n   Starting block cypher program \n initialization...\n")
 
@@ -450,9 +456,9 @@ class BlockCypher(Cypher):
         resPath = getValue(resultToken, resPath)
         key = getValue(keyToken, key)
         initialRegister = getValue(initRegToken, initialRegister)
-        workingMod = getValue(workingModToken, workingMod)
+        BlockCypher.workingMod = getValue(BlockCypher.workingModToken, BlockCypher.workingMod)
 
-        return {"ptPath":ptPath, "ctPath":ctPath, "resPath":resPath, "pattern":pattern, "initReg":initialRegister}
+        return {"ptPath":ptPath, "ctPath":ctPath, "resPath":resPath, "key":key, "initReg":initialRegister, "workingMod":BlockCypher.workingMod}
 
 
     @staticmethod
@@ -474,6 +480,8 @@ class BlockCypher(Cypher):
     def start():
         data = BlockCypher.getValues()
 
+
+
 # DES.start()
-# StreamCypher.start()
-BlockCypher.start()
+StreamCypher.start()
+# BlockCypher.start()
