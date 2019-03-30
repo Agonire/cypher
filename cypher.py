@@ -316,7 +316,7 @@ class DES(Cypher):
         for i in range(len(keys)):
             bits = DES.crypt(bits, keys[i])
             print(bits + " as result of " + str(i+1) + " encryption round, key - " + keys[i] )
-            shift(bits, int(len(bits)/2))
+            bits = shift(bits, int(len(bits)/2))
         # nigelation of simple P in iteration
         result = shift(bits, int(len(bits)/2))
 
@@ -333,7 +333,7 @@ class DES(Cypher):
         for i in reversed(range(len(keys))):
             bits = DES.crypt(bits, keys[i])
             print(bits + " as result of " + str(len(keys) - i) + " decryption round, key - " + keys[i] )
-            shift(bits, int(len(bits)/2))
+            bits = shift(bits, int(len(bits)/2))
         # nigelation of simple P in iteration
         result = shift(bits, int(len(bits)/2))
 
@@ -346,8 +346,8 @@ class DES(Cypher):
     @staticmethod
     def start():
         key = "1101100110"
-        text = "11000010"
-        rounds = 2
+        text = "11110010"
+        rounds = 15
         keys = DES.keyGenerator(key,rounds)
         print("\n\nkeys" + str(keys) + "\n\n")
 
@@ -552,6 +552,6 @@ class BlockCypher(Cypher):
             print("\n\n Ending block cypher \n")
 
 
-DES.start()
+# DES.start()
 # StreamCypher.start()
 # BlockCypher.start()
