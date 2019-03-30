@@ -346,7 +346,7 @@ class DES(Cypher):
     @staticmethod
     def start():
         key = "1101100110"
-        text = "11100010"
+        text = "11000010"
         rounds = 2
         keys = DES.keyGenerator(key,rounds)
         print("\n\nkeys" + str(keys) + "\n\n")
@@ -508,6 +508,10 @@ class BlockCypher(Cypher):
 
     @staticmethod
     def simplePermMod(bitStream, key, cypherMod):
+        s_0 = "1 0 3 2,3 2 1 0,0 2 1 3,3 1 3 1"
+        s_1 = "1 1 2 3,2 0 1 3,3 0 1 0,2 1 0 3"
+
+        #...s_8
         pass
 
     @staticmethod
@@ -525,15 +529,17 @@ class BlockCypher(Cypher):
 
         bitStream = textToBitStream(getFileContent(data["inPath"]))
 
-        if data["workingMod"] == "sp":
-            print("  Using simple permutation mod")
-            result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
-        elif data["workingMod"] == "g":
-            print("  Using gamma mod")
-            result = BlockCypher.gamma(bitStream, data["key"], data["cypherMod"])
-        elif data["workingMod"] == "gf":
-            print("  Using gamma feadback mod")
-            result = BlockCypher.gammaFeadback(bitStream, data["key"], data["cypherMod"])
+        result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
+
+        # if data["workingMod"] == "sp":
+        #     print("  Using simple permutation mod")
+        #     result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
+        # elif data["workingMod"] == "g":
+        #     print("  Using gamma mod")
+        #     result = BlockCypher.gamma(bitStream, data["key"], data["cypherMod"])
+        # elif data["workingMod"] == "gf":
+        #     print("  Using gamma feadback mod")
+        #     result = BlockCypher.gammaFeadback(bitStream, data["key"], data["cypherMod"])
 
         setFileContent(data["outPath"], bitStreamToText(result))
 
@@ -546,6 +552,6 @@ class BlockCypher(Cypher):
             print("\n\n Ending block cypher \n")
 
 
-# DES.start()
+DES.start()
 # StreamCypher.start()
-BlockCypher.start()
+# BlockCypher.start()
