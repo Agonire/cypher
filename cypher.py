@@ -21,7 +21,7 @@ def indexCheck(index):
     return { "modular" : index, "asci" : diff}
 
 # change ASCII index to new one using key
-def modularAdding(letter, key, module = 26):
+def modularLetterAdding(letter, key, module = 26):
 
     index = indexCheck(ord(letter))
     if index:
@@ -40,6 +40,7 @@ def divideBitStream(bitStream, length = 8):
     if len(bitStream)%length == 0:
         return textwrap.wrap(bitStream, length)
     else:
+        print("Cant divide in unequal parts, you need to add " + str(length - len(bitStream)%length))
         return length - len(bitStream)%length
 
 def toBit(num):
@@ -77,14 +78,17 @@ def fromBit(bits):
 
     return result
 
-def addEmptyBit(bits, bitRate = 8):
+def addEmptyBit(bits, bitRate = 8, position = "s"):
     result = ""
     if len(bits) > bitRate:
         print("You are trying to convert bigger bit-rate in lower, in addEmptyBit function")
     if len(bits) < bitRate:
         for i in range(bitRate - len(bits)):
             result += "0"
-    return result + bits
+    if position == "s":
+        return result + bits
+    else:
+        return bits + result
 
 def permutation(bits, pattern):
 
@@ -103,6 +107,20 @@ def splitInTwo(bits):
         print("The bit number should be even")
         return False
     return {"left" : bits[:int(len(bits)/2)], "right" : bits[int(len(bits)/2):]}
+
+def modularBitAdding(arg1, arg2, mod = 2**32):
+    if len(arg1) != len(arg2):
+        if len(arg1) > len(arg2):
+            bigger = len(arg1)
+        else:
+            bigger = len(arg2)
+    else:
+        bigger = len(arg1)
+
+    result = (fromBit(arg1) + fromBit(arg2)) % mod
+    result = addEmptyBit(toBit(result), bigger)
+
+    return result
 
 def shift(bits, value):
     result = ""
@@ -127,17 +145,11 @@ def xorLines(lineA, lineB):
     print("Function XOR (xorLines) need to take equal length strings")
     return False
 
-    # s1 = "1123,2013,3010,2103"
-def substitutionBox(table, value):
-    table = table.split(",")
-    if len(value) != 4:
-        print("The finding input shout be a 4 bit number")
-        return False
-    row = fromBit(value[0]+value[3])
-    column = fromBit(value[1]+value[2])
+def sBox(table, value, bitRate = 4):
+    table = table.split(" ")
 
-    result = toBit(int(table[row][column]))
-    result = addEmptyBit(result, 2)
+    result = toBit(int(table[fromBit(value)]))
+    result = addEmptyBit(result, bitRate)
 
     return result
 
@@ -208,6 +220,17 @@ def getValue(tokenName, default = "", length = -1):
 
     return result
 
+def addBitBlock(bitStream, length = 64):
+
+    blockedBitStream = divideBitStream(bitStream, length)
+    if type(blockedBitStream) == type(1):
+        result = addEmptyBit(toBit(length + blockedBitStream), length)
+        result = addEmptyBit(result, length + blockedBitStream, "e")
+    else:
+        result = addEmptyBit(toBit(length), length)
+
+    return result + bitStream
+
 
 class Cypher():
 
@@ -230,7 +253,7 @@ class Caesar(Cypher):
         else:
             k = indexCheck(ord(key))["modular"]
         for letter in plainText:
-            output += modularAdding(letter, k)
+            output += modularLetterAdding(letter, k)
         return output
 
     @staticmethod
@@ -241,7 +264,7 @@ class Caesar(Cypher):
         else:
             k = indexCheck(ord(key))["modular"]
         for letter in cypherText:
-            output += modularAdding(letter, -k)
+            output += modularLetterAdding(letter, -k)
         return output
 
 class Vizhener(Cypher):
@@ -255,7 +278,7 @@ class Vizhener(Cypher):
             k = indexCheck(ord(key[i % len(key)]))["modular"]
             if indexCheck(ord(letter)):
                 i += 1
-            output += modularAdding(letter, k)
+            output += modularLetterAdding(letter, k)
         return output
 
     @staticmethod
@@ -267,7 +290,7 @@ class Vizhener(Cypher):
             k = indexCheck(ord(key[i % len(key)]))["modular"]
             if indexCheck(ord(letter)):
                 i += 1
-            output += modularAdding(letter, -k)
+            output += modularLetterAdding(letter, -k)
         return output
 
 class DES(Cypher):
@@ -278,8 +301,8 @@ class DES(Cypher):
     permutationEight = "6,3,7,4,8,5,10,9"
     expansionPermutation = "4,1,2,3,2,3,4,1"
     permutationFour = "2,4,3,1"
-    s_zero= "1032,3210,0213,3131"
-    s_one = "1123,2013,3010,2103"
+    s_zero= "1 0 3 2 3 2 1 0 0 2 1 3 3 1 3 1"
+    s_one = "1 1 2 3 2 0 1 3 3 0 1 0 2 1 0 3"
 
     @staticmethod
     def keyGenerator(key, rounds = 1):
@@ -300,7 +323,7 @@ class DES(Cypher):
 
         rightInitPerm = permutation(splitedInitPerm["right"], DES.expansionPermutation)
         xorWithKey = splitInTwo(xorLines(rightInitPerm, key))
-        sBoxResult = substitutionBox(DES.s_zero, xorWithKey["left"]) + substitutionBox(DES.s_one, xorWithKey["right"])
+        sBoxResult = sBox(DES.s_zero, xorWithKey["left"], 2) + sBox(DES.s_one, xorWithKey["right"], 2)
         sBoxResult = permutation(sBoxResult, DES.permutationFour)
 
         splitedInitPerm["left"] = xorLines(splitedInitPerm["left"], sBoxResult)
@@ -347,7 +370,7 @@ class DES(Cypher):
     def start():
         key = "1101100110"
         text = "11110010"
-        rounds = 15
+        rounds = 2
         keys = DES.keyGenerator(key,rounds)
         print("\n\nkeys" + str(keys) + "\n\n")
 
@@ -455,52 +478,54 @@ class BlockCypher(Cypher):
         cypherToken = "cypher mod"
 
         #default values
-        inPath = "./Text files/plainText.txt"
-        outPath = "./Text files/cypherText.txt"
+        # inPath = "./Text files/plainText.txt"
+        # outPath = "./Text files/cypherText.txt"
+        inPath = "./Text files/cypherText.txt"
+        outPath = "./Text files/resultText.txt"
         key =  "1111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111001100"
-        initialRegister = ""
-        workingMod = ""
-        cypherMod = ""
+        initialRegister = "12"
+        workingMod = "sp"
+        cypherMod = "d"
 
         print("\n   Starting block cypher program \n initialization...\n")
 
-        inPath = getValue(inToken, inPath)
-        outPath = getValue(outToken, outPath)
-        key = getValue(keyToken, key)
-        while True:
-            if not checkBlockLength(key, 256):
-                print("You have entered incorrect key length")
-                key = getValue(keyToken)
-            else:
-                break
-
-        initialRegister = getValue(initRegToken, initialRegister)
-        workingMod = getValue(workingModToken, workingMod)
-        while True:
-            if workingMod.lower() == "simple permutation" or workingMod.lower() == "sp":
-                workingMod = "sp"
-                break
-            elif workingMod.lower() == "gamma" or workingMod.lower() == "g":
-                workingMod = "g"
-                break
-            elif workingMod.lower() == "gamma feadback" or workingMod.lower() == "gf":
-                workingMod = "gf"
-                break
-            else:
-                print("  You have entered incorrect working mod value! Try \"Simple permutation\", \"Gamma\" or \"Gamma feadback\"")
-                workingMod = getValue(workingModToken)
+        # inPath = getValue(inToken, inPath)
+        # outPath = getValue(outToken, outPath)
+        # key = getValue(keyToken, key)
+        # while True:
+        #     if not checkBlockLength(key, 256):
+        #         print("You have entered incorrect key length")
+        #         key = getValue(keyToken)
+        #     else:
+        #         break
+        #
+        # initialRegister = getValue(initRegToken, initialRegister)
+        # workingMod = getValue(workingModToken, workingMod)
+        # while True:
+        #     if workingMod.lower() == "simple permutation" or workingMod.lower() == "sp":
+        #         workingMod = "sp"
+        #         break
+        #     elif workingMod.lower() == "gamma" or workingMod.lower() == "g":
+        #         workingMod = "g"
+        #         break
+        #     elif workingMod.lower() == "gamma feadback" or workingMod.lower() == "gf":
+        #         workingMod = "gf"
+        #         break
+        #     else:
+        #         print("  You have entered incorrect working mod value! Try \"Simple permutation\", \"Gamma\" or \"Gamma feadback\"")
+        #         workingMod = getValue(workingModToken)
 
         cypherMod = getValue(cypherToken, cypherMod)
-        while True:
-            if cypherMod.lower() == "encrypt" or cypherMod.lower() == "e":
-                cypherMod = "e"
-                break
-            elif cypherMod.lower() == "decrypt" or cypherMod.lower() == "d":
-                cypherMod = "d"
-                break
-            else:
-                print("  You have entered incorrect cypher mod value! Try encrypt or decrypt")
-                cypherMod = getValue(cypherToken)
+        # while True:
+        #     if cypherMod.lower() == "encrypt" or cypherMod.lower() == "e":
+        #         cypherMod = "e"
+        #         break
+        #     elif cypherMod.lower() == "decrypt" or cypherMod.lower() == "d":
+        #         cypherMod = "d"
+        #         break
+        #     else:
+        #         print("  You have entered incorrect cypher mod value! Try encrypt or decrypt")
+        #         cypherMod = getValue(cypherToken)
 
 
         return {"inPath":inPath, "outPath":outPath,  "key":key, "initReg":initialRegister, "workingMod":workingMod, "cypherMod":cypherMod}
@@ -508,11 +533,86 @@ class BlockCypher(Cypher):
 
     @staticmethod
     def simplePermMod(bitStream, key, cypherMod):
-        s_0 = "1 0 3 2,3 2 1 0,0 2 1 3,3 1 3 1"
-        s_1 = "1 1 2 3,2 0 1 3,3 0 1 0,2 1 0 3"
+        s_0 = "13 4 2 1 3 12 11 10 9 14 0 8 15 5 7 6"
+        s_1 = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0"
+        s_2 = "9 10 11 12 13 14 15 0 1 2 3 4 5 6 7 8"
+        s_3 = "9 10 11 3 4 5 12 15 0 1 2 13 14 6 7 8"
+        s_4 = "9 5 12 13 10 11 3 4 14 6 7 8 15 0 1 2"
+        s_5 = "10 11 3 4 14 9 5 12 13 6 7 8 15 0 1 2"
+        s_6 = "3 4 10 11 14 8 15 0 9 5 12 13 6 7 1 2"
+        s_7 = "0 9 5 12 13 6 3 4 10 11 14 8 15 7 1 2"
 
-        #...s_8
-        pass
+        result = ""
+        keysOrder = ""
+        keys = divideBitStream(key, 32)
+
+        # Creating working keys bit string
+        for i in range(24):
+            keysOrder += keys[i%8]
+        for i in reversed(range(8)):
+            keysOrder += keys[i]
+
+
+        if cypherMod == "e":
+
+            # splitting bit stream in equal parts, adding zeroes at the end of line
+            bitStream = addBitBlock(bitStream, 64)
+            bitStream = divideBitStream(bitStream, 64)
+
+            # operations per block
+            for block in bitStream:
+
+                for i in range(32):
+
+                    leftAndRight = splitInTwo(block)
+
+                    modularBits = modularBitAdding(leftAndRight["right"], keysOrder[i] )
+                    pForBox = divideBitStream(modularBits, 4)
+
+                    sBoxResult = sBox(s_0, pForBox[0]) + sBox(s_1, pForBox[1]) + sBox(s_2, pForBox[2]) + sBox(s_3, pForBox[3]) + sBox(s_4, pForBox[4]) + sBox(s_5, pForBox[5]) + sBox(s_6, pForBox[6]) + sBox(s_7, pForBox[7])
+                    sBoxResult = shift(sBoxResult,11)
+
+                    leftAndRight["left"] = xorLines(leftAndRight["left"], sBoxResult)
+
+                    block = leftAndRight["right"] + leftAndRight["left"]
+
+
+                # negelation of last permutation
+                block = shift(block, int(len(block)/2))
+                result += block
+
+        else:
+
+            bitStream = divideBitStream(bitStream, 64)
+
+            # operations per block
+            for block in bitStream:
+
+                for i in reversed(range(32)):
+
+                    leftAndRight = splitInTwo(block)
+
+                    modularBits = modularBitAdding(leftAndRight["right"], keysOrder[i] )
+                    pForBox = divideBitStream(modularBits, 4)
+
+                    sBoxResult = sBox(s_0, pForBox[0]) + sBox(s_1, pForBox[1]) + sBox(s_2, pForBox[2]) + sBox(s_3, pForBox[3]) + sBox(s_4, pForBox[4]) + sBox(s_5, pForBox[5]) + sBox(s_6, pForBox[6]) + sBox(s_7, pForBox[7])
+                    sBoxResult = shift(sBoxResult,11)
+
+                    leftAndRight["left"] = xorLines(leftAndRight["left"], sBoxResult)
+
+                    block = leftAndRight["right"] + leftAndRight["left"]
+
+
+                # negelation of last permutation
+                block = shift(block, int(len(block)/2))
+                result += block
+
+            additionalBits = fromBit(result[:64])
+            # print(additionalBits)
+            result = result[additionalBits:]
+
+        return result
+
 
     @staticmethod
     def gamma(bitStream, key, cypherMod):
@@ -529,17 +629,16 @@ class BlockCypher(Cypher):
 
         bitStream = textToBitStream(getFileContent(data["inPath"]))
 
-        result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
+        if data["workingMod"] == "sp":
+            print("  Using simple permutation mod")
+            result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
+        elif data["workingMod"] == "g":
+            print("  Using gamma mod")
+            result = BlockCypher.gamma(bitStream, data["key"], data["cypherMod"])
+        elif data["workingMod"] == "gf":
+            print("  Using gamma feadback mod")
+            result = BlockCypher.gammaFeadback(bitStream, data["key"], data["cypherMod"])
 
-        # if data["workingMod"] == "sp":
-        #     print("  Using simple permutation mod")
-        #     result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
-        # elif data["workingMod"] == "g":
-        #     print("  Using gamma mod")
-        #     result = BlockCypher.gamma(bitStream, data["key"], data["cypherMod"])
-        # elif data["workingMod"] == "gf":
-        #     print("  Using gamma feadback mod")
-        #     result = BlockCypher.gammaFeadback(bitStream, data["key"], data["cypherMod"])
 
         setFileContent(data["outPath"], bitStreamToText(result))
 
@@ -552,6 +651,9 @@ class BlockCypher(Cypher):
             print("\n\n Ending block cypher \n")
 
 
+
+
+
 # DES.start()
 # StreamCypher.start()
-# BlockCypher.start()
+BlockCypher.start()
