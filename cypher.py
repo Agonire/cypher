@@ -478,14 +478,14 @@ class BlockCypher(Cypher):
         cypherToken = "cypher mod"
 
         #default values
-        # inPath = "./Text files/plainText.txt"
-        # outPath = "./Text files/cypherText.txt"
-        inPath = "./Text files/cypherText.txt"
-        outPath = "./Text files/resultText.txt"
+        inPath = "./Text files/plainText.txt"
+        outPath = "./Text files/cypherText.txt"
+        # inPath = "./Text files/cypherText.txt"
+        # outPath = "./Text files/resultText.txt"
         key =  "1111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111001100"
-        initialRegister = "12"
-        workingMod = "sp"
-        cypherMod = "d"
+        initialRegister = "1111111111000000000011111111110000000000111111111100000000001111"
+        workingMod = "g"
+        cypherMod = "e"
 
         print("\n   Starting block cypher program \n initialization...\n")
 
@@ -498,8 +498,14 @@ class BlockCypher(Cypher):
         #         key = getValue(keyToken)
         #     else:
         #         break
-        #
+
         # initialRegister = getValue(initRegToken, initialRegister)
+        # while True:
+            if not checkBlockLength(initialRegister, 64):
+                print("You have entered incorrect key length")
+                initialRegister = getValue(initRegToken)
+            else:
+                break
         # workingMod = getValue(workingModToken, workingMod)
         # while True:
         #     if workingMod.lower() == "simple permutation" or workingMod.lower() == "sp":
