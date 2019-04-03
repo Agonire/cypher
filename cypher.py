@@ -464,6 +464,32 @@ class StreamCypher(Cypher):
 class BlockCypher(Cypher):
 
 
+    @staticmethod
+    def basicStep(block, roundKey):
+
+        s_0 = "13 4 2 1 3 12 11 10 9 14 0 8 15 5 7 6"
+        s_1 = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0"
+        s_2 = "9 10 11 12 13 14 15 0 1 2 3 4 5 6 7 8"
+        s_3 = "9 10 11 3 4 5 12 15 0 1 2 13 14 6 7 8"
+        s_4 = "9 5 12 13 10 11 3 4 14 6 7 8 15 0 1 2"
+        s_5 = "10 11 3 4 14 9 5 12 13 6 7 8 15 0 1 2"
+        s_6 = "3 4 10 11 14 8 15 0 9 5 12 13 6 7 1 2"
+        s_7 = "0 9 5 12 13 6 3 4 10 11 14 8 15 7 1 2"
+
+        leftAndRight = splitInTwo(block)
+
+        modularBits = modularBitAdding(leftAndRight["right"], roundKey)
+        pForBox = divideBitStream(modularBits, 4)
+
+        sBoxResult = sBox(s_0, pForBox[0]) + sBox(s_1, pForBox[1]) + sBox(s_2, pForBox[2]) + sBox(s_3, pForBox[3]) + sBox(s_4, pForBox[4]) + sBox(s_5, pForBox[5]) + sBox(s_6, pForBox[6]) + sBox(s_7, pForBox[7])
+        sBoxResult = shift(sBoxResult,11)
+
+        leftAndRight["left"] = xorLines(leftAndRight["left"], sBoxResult)
+
+        block = leftAndRight["right"] + leftAndRight["left"]
+
+        return block
+
 
     @staticmethod
     def getValues():
@@ -478,10 +504,10 @@ class BlockCypher(Cypher):
         cypherToken = "cypher mod"
 
         #default values
-        inPath = "./Text files/plainText.txt"
-        outPath = "./Text files/cypherText.txt"
-        # inPath = "./Text files/cypherText.txt"
-        # outPath = "./Text files/resultText.txt"
+        # inPath = "./Text files/plainText.txt"
+        # outPath = "./Text files/cypherText.txt"
+        inPath = "./Text files/cypherText.txt"
+        outPath = "./Text files/resultText.txt"
         key =  "1111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111001100"
         initialRegister = "1111111111000000000011111111110000000000111111111100000000001111"
         workingMod = "g"
@@ -501,11 +527,11 @@ class BlockCypher(Cypher):
 
         # initialRegister = getValue(initRegToken, initialRegister)
         # while True:
-            if not checkBlockLength(initialRegister, 64):
-                print("You have entered incorrect key length")
-                initialRegister = getValue(initRegToken)
-            else:
-                break
+            # if not checkBlockLength(initialRegister, 64):
+            #     print("You have entered incorrect key length")
+            #     initialRegister = getValue(initRegToken)
+            # else:
+            #     break
         # workingMod = getValue(workingModToken, workingMod)
         # while True:
         #     if workingMod.lower() == "simple permutation" or workingMod.lower() == "sp":
@@ -538,21 +564,14 @@ class BlockCypher(Cypher):
 
 
     @staticmethod
-    def simplePermMod(bitStream, key, cypherMod):
-        s_0 = "13 4 2 1 3 12 11 10 9 14 0 8 15 5 7 6"
-        s_1 = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0"
-        s_2 = "9 10 11 12 13 14 15 0 1 2 3 4 5 6 7 8"
-        s_3 = "9 10 11 3 4 5 12 15 0 1 2 13 14 6 7 8"
-        s_4 = "9 5 12 13 10 11 3 4 14 6 7 8 15 0 1 2"
-        s_5 = "10 11 3 4 14 9 5 12 13 6 7 8 15 0 1 2"
-        s_6 = "3 4 10 11 14 8 15 0 9 5 12 13 6 7 1 2"
-        s_7 = "0 9 5 12 13 6 3 4 10 11 14 8 15 7 1 2"
+    def simplePermMod(bitStream, key, cypherMod = "e", parametr = True):
+
 
         result = ""
         keysOrder = ""
         keys = divideBitStream(key, 32)
 
-        # Creating working keys bit string
+        # Creating working keys bit string    32-З
         for i in range(24):
             keysOrder += keys[i%8]
         for i in reversed(range(8)):
@@ -562,7 +581,8 @@ class BlockCypher(Cypher):
         if cypherMod == "e":
 
             # splitting bit stream in equal parts, adding zeroes at the end of line
-            bitStream = addBitBlock(bitStream, 64)
+            if parametr == True:
+                bitStream = addBitBlock(bitStream, 64)
             bitStream = divideBitStream(bitStream, 64)
 
             # operations per block
@@ -570,18 +590,7 @@ class BlockCypher(Cypher):
 
                 for i in range(32):
 
-                    leftAndRight = splitInTwo(block)
-
-                    modularBits = modularBitAdding(leftAndRight["right"], keysOrder[i] )
-                    pForBox = divideBitStream(modularBits, 4)
-
-                    sBoxResult = sBox(s_0, pForBox[0]) + sBox(s_1, pForBox[1]) + sBox(s_2, pForBox[2]) + sBox(s_3, pForBox[3]) + sBox(s_4, pForBox[4]) + sBox(s_5, pForBox[5]) + sBox(s_6, pForBox[6]) + sBox(s_7, pForBox[7])
-                    sBoxResult = shift(sBoxResult,11)
-
-                    leftAndRight["left"] = xorLines(leftAndRight["left"], sBoxResult)
-
-                    block = leftAndRight["right"] + leftAndRight["left"]
-
+                    block = BlockCypher.basicStep(block, keysOrder[i])
 
                 # negelation of last permutation
                 block = shift(block, int(len(block)/2))
@@ -596,18 +605,7 @@ class BlockCypher(Cypher):
 
                 for i in reversed(range(32)):
 
-                    leftAndRight = splitInTwo(block)
-
-                    modularBits = modularBitAdding(leftAndRight["right"], keysOrder[i] )
-                    pForBox = divideBitStream(modularBits, 4)
-
-                    sBoxResult = sBox(s_0, pForBox[0]) + sBox(s_1, pForBox[1]) + sBox(s_2, pForBox[2]) + sBox(s_3, pForBox[3]) + sBox(s_4, pForBox[4]) + sBox(s_5, pForBox[5]) + sBox(s_6, pForBox[6]) + sBox(s_7, pForBox[7])
-                    sBoxResult = shift(sBoxResult,11)
-
-                    leftAndRight["left"] = xorLines(leftAndRight["left"], sBoxResult)
-
-                    block = leftAndRight["right"] + leftAndRight["left"]
-
+                    block = BlockCypher.basicStep(block, keysOrder[i])
 
                 # negelation of last permutation
                 block = shift(block, int(len(block)/2))
@@ -621,11 +619,36 @@ class BlockCypher(Cypher):
 
 
     @staticmethod
-    def gamma(bitStream, key, cypherMod):
-        pass
+    def gammaOFB(bitStream, key, initialRegister):
+
+        gamma = ""
+
+        for i in range(int(len(bitStream)/64) + 1):
+
+            initReg = BlockCypher.simplePermMod(initialRegister, key, parametr = False)
+
+            oldAndYoung = splitInTwo(initReg)
+            # old = left, young = right
+
+            firstConst = addEmptyBit(toBit(1010101), 32)
+            young = modularBitAdding(oldAndYoung["right"], firstConst)
+
+            secondConst = addEmptyBit(toBit(1010103), 32)
+            old = modularBitAdding(oldAndYoung["left"], secondConst, 2**32-1+i)
+
+            initialRegister = old + young
+            gamma += initialRegister
+
+
+        gamma = gamma[:len(bitStream)]
+
+        result = xorLines(gamma, bitStream)
+
+        return result
+
 
     @staticmethod
-    def gammaFeadback(bitStream, key, cypherMod):
+    def gammaCFB(bitStream, key, cypherMod):
         pass
 
 
@@ -639,15 +662,16 @@ class BlockCypher(Cypher):
             print("  Using simple permutation mod")
             result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
         elif data["workingMod"] == "g":
-            print("  Using gamma mod")
-            result = BlockCypher.gamma(bitStream, data["key"], data["cypherMod"])
+            print("  Using gammaOFB mod")
+            result = BlockCypher.gammaOFB(bitStream, data["key"], data["initReg"])
         elif data["workingMod"] == "gf":
             print("  Using gamma feadback mod")
-            result = BlockCypher.gammaFeadback(bitStream, data["key"], data["cypherMod"])
+            result = BlockCypher.gammaCFB(bitStream, data["key"], data["cypherMod"])
 
 
         setFileContent(data["outPath"], bitStreamToText(result))
 
+        # setFileContent("./Text files/resultText.txt", bitStreamToText(BlockCypher.gammaOFB(result, data["key"], data["initReg"])))
 
         print("\n\n Would you like to continue? \n")
         inp = input()
@@ -658,8 +682,6 @@ class BlockCypher(Cypher):
 
 
 
-
-
 # DES.start()
-# StreamCypher.start()
-BlockCypher.start()
+StreamCypher.start()
+# BlockCypher.start()
