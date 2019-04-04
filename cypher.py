@@ -153,9 +153,9 @@ def sBox(table, value, bitRate = 4):
 
     return result
 
-def getFileContent(path):
+def getFileContent(path, enc = "utf-8"):
     try:
-        f = open(path, "rt", encoding="utf-8")
+        f = open(path, "rt", encoding=enc)
         content = f.read()
         f.close()
         return content
@@ -163,19 +163,19 @@ def getFileContent(path):
         print("File in destination " + path + " does not exist")
         return False
 
-def setFileContent(path, content = ""):
+def setFileContent(path, content = "", enc = "utf-8"):
     try:
-        f = open(path, "xt", encoding="utf-8")
+        f = open(path, "xt", encoding=enc)
         print("\n    Creating and writing to a new file at " + path + " location\n")
     except:
         print("\n    Writing to an existing file at " + path + " location\n")
     finally:
-        f = open(path, "wt", encoding="utf-8")
+        f = open(path, "wt", encoding=enc)
         f.write(content)
         f.close()
 
-def textToBitStream(text, bitRate = 8):
-    # Since this function is working with ASCII table the lowest possible bit-rate value should be 8, or you will get incorrect values
+def textToBitStream(text, bitRate = 16):
+    # To be able to convert higher values then ASCII table, increase bitRate
     bitStream = ""
     for symbol in text:
         bitValue = addEmptyBit(toBit(ord(symbol)), bitRate)
@@ -183,8 +183,8 @@ def textToBitStream(text, bitRate = 8):
 
     return bitStream
 
-def bitStreamToText(bitStream, bitRate = 8):
-    # Since this function is working with ASCII table the lowest possible bit-rate value should be 8, or you will get incorrect values
+def bitStreamToText(bitStream, bitRate = 16):
+    # To be able to convert higher values then ASCII table, increase bitRate
     text = ""
     bitStream = textwrap.wrap(bitStream, bitRate)
     for item in bitStream:
@@ -442,12 +442,11 @@ class StreamCypher(Cypher):
             bitStream = textToBitStream(content)
             keyStream = StreamCypher.keyGenerator(initialRegister, pattern, bitStream = bitStream)
 
-            bitStream = xorLines(bitStream, keyStream)
-            output = bitStreamToText(bitStream)
-
+            xoredBits = xorLines(bitStream, keyStream)
+            output = bitStreamToText(xoredBits)
             setFileContent(toPath, output)
+
         else:
-            # this option is used to create empty file if not exist
             setFileContent(fromPath)
 
 
@@ -504,10 +503,9 @@ class BlockCypher(Cypher):
         cypherToken = "cypher mod"
 
         #default values
-        # inPath = "./Text files/plainText.txt"
-        # outPath = "./Text files/cypherText.txt"
-        inPath = "./Text files/cypherText.txt"
-        outPath = "./Text files/resultText.txt"
+        inPath = "./Text files/plainText.txt"
+        outPath = "./Text files/cypherText.txt"
+        # Path = "./Text files/resultText.txt"
         key =  "1111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111001100"
         initialRegister = "1111111111000000000011111111110000000000111111111100000000001111"
         workingMod = "g"
@@ -527,40 +525,46 @@ class BlockCypher(Cypher):
 
         # initialRegister = getValue(initRegToken, initialRegister)
         # while True:
-            # if not checkBlockLength(initialRegister, 64):
-            #     print("You have entered incorrect key length")
-            #     initialRegister = getValue(initRegToken)
-            # else:
-            #     break
-        # workingMod = getValue(workingModToken, workingMod)
-        # while True:
-        #     if workingMod.lower() == "simple permutation" or workingMod.lower() == "sp":
-        #         workingMod = "sp"
-        #         break
-        #     elif workingMod.lower() == "gamma" or workingMod.lower() == "g":
-        #         workingMod = "g"
-        #         break
-        #     elif workingMod.lower() == "gamma feadback" or workingMod.lower() == "gf":
-        #         workingMod = "gf"
-        #         break
+        #     if not checkBlockLength(initialRegister, 64):
+        #         print("You have entered incorrect key length")
+        #         initialRegister = getValue(initRegToken)
         #     else:
-        #         print("  You have entered incorrect working mod value! Try \"Simple permutation\", \"Gamma\" or \"Gamma feadback\"")
-        #         workingMod = getValue(workingModToken)
+        #         break
+
+
+        workingMod = getValue(workingModToken, workingMod)
+        while True:
+            if workingMod.lower() == "simple permutation" or workingMod.lower() == "sp":
+                workingMod = "sp"
+                break
+            elif workingMod.lower() == "gamma" or workingMod.lower() == "g":
+                workingMod = "g"
+                break
+            elif workingMod.lower() == "gamma feadback" or workingMod.lower() == "gf":
+                workingMod = "gf"
+                break
+            else:
+                print("  You have entered incorrect working mod value! Try \"Simple permutation\", \"Gamma\" or \"Gamma feadback\"")
+                workingMod = getValue(workingModToken)
 
         cypherMod = getValue(cypherToken, cypherMod)
-        # while True:
-        #     if cypherMod.lower() == "encrypt" or cypherMod.lower() == "e":
-        #         cypherMod = "e"
-        #         break
-        #     elif cypherMod.lower() == "decrypt" or cypherMod.lower() == "d":
-        #         cypherMod = "d"
-        #         break
-        #     else:
-        #         print("  You have entered incorrect cypher mod value! Try encrypt or decrypt")
-        #         cypherMod = getValue(cypherToken)
+        while True:
+            if cypherMod.lower() == "encrypt" or cypherMod.lower() == "e":
+                cypherMod = "e"
+                break
+            elif cypherMod.lower() == "decrypt" or cypherMod.lower() == "d":
+                cypherMod = "d"
+                break
+            else:
+                print("  You have entered incorrect cypher mod value! Try encrypt or decrypt")
+                cypherMod = getValue(cypherToken)
 
 
-        return {"inPath":inPath, "outPath":outPath,  "key":key, "initReg":initialRegister, "workingMod":workingMod, "cypherMod":cypherMod}
+        if cypherMod == "d":
+            inPath = "./Text files/cypherText.txt"
+            outPath = "./Text files/resultText.txt"
+
+        return {"inPath":inPath, "outPath":outPath,    "key":key, "initReg":initialRegister, "workingMod":workingMod, "cypherMod":cypherMod}
 
 
     @staticmethod
@@ -656,8 +660,13 @@ class BlockCypher(Cypher):
     def start():
         data = BlockCypher.getValues()
 
-        bitStream = textToBitStream(getFileContent(data["inPath"]))
 
+        if data["cypherMod"] == "e":
+            bitStream = textToBitStream(getFileContent(data["inPath"]))
+        else:
+            bitStream = getFileContent(data["inPath"])
+
+        # bitStream = textToBitStream(getFileContent(data["inPath"]))
         if data["workingMod"] == "sp":
             print("  Using simple permutation mod")
             result = BlockCypher.simplePermMod(bitStream, data["key"], data["cypherMod"])
@@ -666,12 +675,14 @@ class BlockCypher(Cypher):
             result = BlockCypher.gammaOFB(bitStream, data["key"], data["initReg"])
         elif data["workingMod"] == "gf":
             print("  Using gamma feadback mod")
-            result = BlockCypher.gammaCFB(bitStream, data["key"], data["cypherMod"])
+            result = BlockCypher.gammaCFB(bitStream, data["key"], data["initReg"])
+        # setFileContent(data["outPath"], bitStreamToText(result))
 
+        if data["cypherMod"] == "e":
+            setFileContent(data["outPath"], result)
+        else:
+            setFileContent(data["outPath"], bitStreamToText(result))
 
-        setFileContent(data["outPath"], bitStreamToText(result))
-
-        # setFileContent("./Text files/resultText.txt", bitStreamToText(BlockCypher.gammaOFB(result, data["key"], data["initReg"])))
 
         print("\n\n Would you like to continue? \n")
         inp = input()
@@ -683,5 +694,5 @@ class BlockCypher(Cypher):
 
 
 # DES.start()
-StreamCypher.start()
-# BlockCypher.start()
+# StreamCypher.start()
+BlockCypher.start()
