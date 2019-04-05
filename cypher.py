@@ -37,6 +37,9 @@ def checkBlockLength(bits, length = 8):
         return False
 
 def divideBitStream(bitStream, length = 8):
+    return textwrap.wrap(bitStream, length)
+
+def divideBitStreamInEqual(bitStream, length = 8):
     if len(bitStream)%length == 0:
         return textwrap.wrap(bitStream, length)
     else:
@@ -142,7 +145,7 @@ def xorLines(lineA, lineB):
         for i in range(len(lineA)):
             result += str(xor(int(lineA[i]), int(lineB[i])))
         return result
-    print("Function XOR (xorLines) need to take equal length strings")
+    # print("Function XOR (xorLines) need to take equal length strings")
     return False
 
 def sBox(table, value, bitRate = 4):
@@ -222,7 +225,7 @@ def getValue(tokenName, default = "", length = -1):
 
 def addBitBlock(bitStream, length = 64):
 
-    blockedBitStream = divideBitStream(bitStream, length)
+    blockedBitStream = divideBitStreamInEqual(bitStream, length)
     if type(blockedBitStream) == type(1):
         result = addEmptyBit(toBit(length + blockedBitStream), length)
         result = addEmptyBit(result, length + blockedBitStream, "e")
@@ -462,6 +465,22 @@ class StreamCypher(Cypher):
 
 class BlockCypher(Cypher):
 
+    @staticmethod
+    def cyphering(initialRegister, key, i):
+        initReg = BlockCypher.simplePermMod(initialRegister, key, parametr = False)
+
+        oldAndYoung = splitInTwo(initReg)
+        # old = left, young = right
+
+        firstConst = addEmptyBit(toBit(1010101), 32)
+        young = modularBitAdding(oldAndYoung["right"], firstConst)
+
+        secondConst = addEmptyBit(toBit(1010103), 32)
+        old = modularBitAdding(oldAndYoung["left"], secondConst, 2**32-1+i)
+
+
+        return old + young
+
 
     @staticmethod
     def basicStep(block, roundKey):
@@ -478,7 +497,7 @@ class BlockCypher(Cypher):
         leftAndRight = splitInTwo(block)
 
         modularBits = modularBitAdding(leftAndRight["right"], roundKey)
-        pForBox = divideBitStream(modularBits, 4)
+        pForBox = divideBitStreamInEqual(modularBits, 4)
 
         sBoxResult = sBox(s_0, pForBox[0]) + sBox(s_1, pForBox[1]) + sBox(s_2, pForBox[2]) + sBox(s_3, pForBox[3]) + sBox(s_4, pForBox[4]) + sBox(s_5, pForBox[5]) + sBox(s_6, pForBox[6]) + sBox(s_7, pForBox[7])
         sBoxResult = shift(sBoxResult,11)
@@ -488,6 +507,48 @@ class BlockCypher(Cypher):
         block = leftAndRight["right"] + leftAndRight["left"]
 
         return block
+
+
+    @staticmethod
+    def baseAlgorithm(bitStream, key, rev = False):
+
+        result = ""
+
+        keysList = ""
+        keys = divideBitStreamInEqual(key, 32)
+        for i in range(24):
+            keysList += keys[i%8]
+        for i in reversed(range(8)):
+            keysList += keys[i]
+
+
+        if rev:
+
+            # operations per block
+            for block in bitStream:
+
+                for i in reversed(range(32)):
+
+                    block = BlockCypher.basicStep(block, keysList[i])
+
+                # negelation of last permutation
+                block = shift(block, int(len(block)/2))
+                result += block
+
+        else:
+
+            # operations per block
+            for block in bitStream:
+
+                for i in range(32):
+
+                    block = BlockCypher.basicStep(block, keysList[i])
+
+                # negelation of last permutation
+                block = shift(block, int(len(block)/2))
+                result += block
+
+        return result
 
 
     @staticmethod
@@ -508,7 +569,7 @@ class BlockCypher(Cypher):
         # Path = "./Text files/resultText.txt"
         key =  "1111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111000000000011111111110000000000111111111100000000001111111111001100"
         initialRegister = "1111111111000000000011111111110000000000111111111100000000001111"
-        workingMod = "g"
+        workingMod = "gf"
         cypherMod = "e"
 
         print("\n   Starting block cypher program \n initialization...\n")
@@ -571,52 +632,19 @@ class BlockCypher(Cypher):
     def simplePermMod(bitStream, key, cypherMod = "e", parametr = True):
 
 
-        result = ""
-        keysOrder = ""
-        keys = divideBitStream(key, 32)
-
-        # Creating working keys bit string    32-З
-        for i in range(24):
-            keysOrder += keys[i%8]
-        for i in reversed(range(8)):
-            keysOrder += keys[i]
-
-
         if cypherMod == "e":
 
-            # splitting bit stream in equal parts, adding zeroes at the end of line
-            if parametr == True:
-                bitStream = addBitBlock(bitStream, 64)
-            bitStream = divideBitStream(bitStream, 64)
+            bitStream = addBitBlock(bitStream, 64)
+            bitStream = divideBitStreamInEqual(bitStream, 64)
 
-            # operations per block
-            for block in bitStream:
-
-                for i in range(32):
-
-                    block = BlockCypher.basicStep(block, keysOrder[i])
-
-                # negelation of last permutation
-                block = shift(block, int(len(block)/2))
-                result += block
+            result = BlockCypher.baseAlgorithm(bitStream, key)
 
         else:
 
-            bitStream = divideBitStream(bitStream, 64)
-
-            # operations per block
-            for block in bitStream:
-
-                for i in reversed(range(32)):
-
-                    block = BlockCypher.basicStep(block, keysOrder[i])
-
-                # negelation of last permutation
-                block = shift(block, int(len(block)/2))
-                result += block
-
+            bitStream = divideBitStreamInEqual(bitStream, 64)
+            result = BlockCypher.baseAlgorithm(bitStream, key, True)
             additionalBits = fromBit(result[:64])
-            # print(additionalBits)
+
             result = result[additionalBits:]
 
         return result
@@ -627,33 +655,38 @@ class BlockCypher(Cypher):
 
         gamma = ""
 
+        initialRegister = BlockCypher.cyphering(initialRegister, key, 0)
+
         for i in range(int(len(bitStream)/64) + 1):
 
-            initReg = BlockCypher.simplePermMod(initialRegister, key, parametr = False)
-
-            oldAndYoung = splitInTwo(initReg)
-            # old = left, young = right
-
-            firstConst = addEmptyBit(toBit(1010101), 32)
-            young = modularBitAdding(oldAndYoung["right"], firstConst)
-
-            secondConst = addEmptyBit(toBit(1010103), 32)
-            old = modularBitAdding(oldAndYoung["left"], secondConst, 2**32-1+i)
-
-            initialRegister = old + young
+            initialRegister = BlockCypher.cyphering(initialRegister, key, i)
             gamma += initialRegister
 
-
         gamma = gamma[:len(bitStream)]
-
         result = xorLines(gamma, bitStream)
+
 
         return result
 
 
     @staticmethod
-    def gammaCFB(bitStream, key, cypherMod):
-        pass
+    def gammaCFB(bitStream, key, initialRegister):
+
+        gamma = ""
+        result = ""
+        blockedBitStream = divideBitStream(bitStream, 64)
+
+        initialRegister = BlockCypher.cyphering(initialRegister, key, 0)
+
+        for i in range(int(len(bitStream)/64) + 1):
+
+            initialRegister = BlockCypher.cyphering(initialRegister, key, i)
+            gamma += initialRegister
+
+        gamma = gamma[:len(bitStream)]
+        result = xorLines(gamma, bitStream)
+
+        return result
 
 
     @staticmethod
@@ -677,7 +710,6 @@ class BlockCypher(Cypher):
             print("  Using gamma feadback mod")
             result = BlockCypher.gammaCFB(bitStream, data["key"], data["initReg"])
         # setFileContent(data["outPath"], bitStreamToText(result))
-
         if data["cypherMod"] == "e":
             setFileContent(data["outPath"], result)
         else:
