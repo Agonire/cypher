@@ -39,11 +39,12 @@ def checkBlockLength(bits, length = 8):
 def divideBitStream(bitStream, length = 8):
     return textwrap.wrap(bitStream, length)
 
-def divideBitStreamInEqual(bitStream, length = 8):
+def divideBitStreamInEqual(bitStream, length = 8, debug = False):
     if len(bitStream)%length == 0:
         return textwrap.wrap(bitStream, length)
     else:
-        print("Cant divide in unequal parts, you need to add " + str(length - len(bitStream)%length))
+        if bebug:
+            print("Cant divide in unequal parts, you need to add " + str(length - len(bitStream)%length))
         return length - len(bitStream)%length
 
 def toBit(num):
@@ -467,7 +468,8 @@ class BlockCypher(Cypher):
 
     @staticmethod
     def cyphering(initialRegister, key, i):
-        initReg = BlockCypher.simplePermMod(initialRegister, key, parametr = False)
+
+        initReg = BlockCypher.baseAlgorithm([initialRegister], key, True)
 
         oldAndYoung = splitInTwo(initReg)
         # old = left, young = right
